@@ -1,0 +1,12 @@
+Source: ros-kinetic-pilz-trajectory-generation
+Section: misc
+Priority: extra
+Maintainer: Pilz GmbH and Co. KG <ros@pilz.de>
+Build-Depends: debhelper (>= 9.0.0), ros-kinetic-abb-irb2400-moveit-config, ros-kinetic-catkin, ros-kinetic-cmake-modules, ros-kinetic-code-coverage, ros-kinetic-moveit-core, ros-kinetic-moveit-msgs, ros-kinetic-moveit-ros-move-group, ros-kinetic-moveit-ros-planning, ros-kinetic-moveit-ros-planning-interface, ros-kinetic-orocos-kdl, ros-kinetic-panda-moveit-config, ros-kinetic-pilz-extensions, ros-kinetic-pilz-industrial-motion-testutils, ros-kinetic-pilz-msgs, ros-kinetic-pluginlib, ros-kinetic-prbt-moveit-config, ros-kinetic-prbt-pg70-support, ros-kinetic-prbt-support, ros-kinetic-roscpp, ros-kinetic-roslint, ros-kinetic-rospy, ros-kinetic-rostest, ros-kinetic-rosunit, ros-kinetic-tf-conversions, ros-kinetic-tf2, ros-kinetic-tf2-eigen, ros-kinetic-tf2-geometry-msgs
+Homepage: https://wiki.ros.org/pilz_industrial_motion
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-pilz-trajectory-generation
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-kinetic-message-runtime, ros-kinetic-moveit-commander, ros-kinetic-moveit-core, ros-kinetic-moveit-msgs, ros-kinetic-moveit-ros-move-group, ros-kinetic-moveit-ros-planning, ros-kinetic-moveit-ros-planning-interface, ros-kinetic-orocos-kdl, ros-kinetic-pilz-extensions, ros-kinetic-pilz-msgs, ros-kinetic-prbt-ikfast-manipulator-plugin, ros-kinetic-roscpp, ros-kinetic-rospy, ros-kinetic-tf-conversions, ros-kinetic-tf2, ros-kinetic-tf2-geometry-msgs
+Description: The pilz_trajectory_generation package
