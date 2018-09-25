@@ -1,8 +1,0 @@
-ros-kinetic-pilz-trajectory-generation (0.1.0-0xenial) xenial; urgency=high
-
-  * Created trajectory generation package with ptp, lin, circ and blend planner
-  * Contributors: Pilz GmbH and Co. KG
-
- -- Pilz GmbH and Co. KG <ros@pilz.de>  Thu, 13 Sep 2018 22:00:00 -0000
-
-
