@@ -19,12 +19,10 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_eigen
   tf2_geometry_msgs
-  tf_conversions
+  eigen_conversions
   moveit_ros_move_group
   moveit_ros_planning_interface
-  rospy
   pilz_industrial_motion_testutils
-  roslint
 )
 
 
@@ -255,13 +253,11 @@ target_link_libraries(integrationtest_command_planning
 add_rostest(test/integrationtest_command_planning_with_gripper.test
   DEPENDENCIES integrationtest_command_planning )
 
-# Tests with other robots only for kinetic (for now)
+add_rostest(test/integrationtest_command_planning_abb_irb2400.test
+  DEPENDENCIES integrationtest_command_planning )
 
-#add_rostest(test/integrationtest_command_planning_abb_irb2400.test
-#  DEPENDENCIES integrationtest_command_planning )
-
-#add_rostest(test/integrationtest_command_planning_frankaemika_panda.test
-#  DEPENDENCIES integrationtest_command_planning )
+add_rostest(test/integrationtest_command_planning_frankaemika_panda.test
+  DEPENDENCIES integrationtest_command_planning )
 
 # Blending Integration tests
 add_rostest_gtest(integrationtest_command_list_manager

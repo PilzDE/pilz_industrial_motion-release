@@ -2,9 +2,10 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.2.0 (2018-09-14)
+0.1.1 (2018-09-25)
 ------------------
-* Changes for melodic
+* port to melodic
+* drop unused dependencies
 * Contributors: Pilz GmbH and Co. KG
 
 0.1.0 (2018-09-14)
