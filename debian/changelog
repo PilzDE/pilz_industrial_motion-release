@@ -1,0 +1,26 @@
+ros-melodic-pilz-msgs (0.2.1-0stretch) stretch; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Mon, 24 Sep 2018 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.2.0-0stretch) stretch; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Thu, 13 Sep 2018 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.1.1-0stretch) stretch; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Mon, 24 Sep 2018 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.1.0-0stretch) stretch; urgency=high
+
+  * Added msg definition for blend request and response
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Thu, 13 Sep 2018 22:00:00 -0000
+
+
