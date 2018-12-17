@@ -1,0 +1,15 @@
+ros-kinetic-pilz-robot-programming (0.3.1-0xenial) xenial; urgency=high
+
+  * Add RobotMotionObserver in testutils
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Sun, 16 Dec 2018 23:00:00 -0000
+
+ros-kinetic-pilz-robot-programming (0.3.0-0xenial) xenial; urgency=high
+
+  * Release Python-API
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Tue, 27 Nov 2018 23:00:00 -0000
+
+
