@@ -1,0 +1,13 @@
+Source: ros-kinetic-pilz-extensions
+Section: misc
+Priority: extra
+Maintainer: Pilz GmbH and Co. KG <ros@pilz.de>
+Build-Depends: debhelper (>= 9.0.0), ros-kinetic-catkin, ros-kinetic-code-coverage, ros-kinetic-joint-limits-interface, ros-kinetic-roscpp, ros-kinetic-rostest, ros-kinetic-rosunit
+Homepage: https://wiki.ros.org/pilz_extensions
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-pilz-extensions
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-kinetic-prbt-support
+Description: The pilz_extensions package.
+ Here are classes extending the functionality of other packages. On the long run these extensions should become pull requests on the respective packages.
