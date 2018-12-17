@@ -2,6 +2,9 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.1 (2018-12-17)
+------------------
+
 0.3.0 (2018-11-28)
 ------------------
 * add append method for avoiding duplicate points in robot_trajectory trajectories
