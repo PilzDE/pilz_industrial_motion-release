@@ -227,6 +227,14 @@ void TrajectoryGeneratorPTP::planPTP(const std::map<std::string, double>& start_
     }
     joint_trajectory.points.push_back(point);
   }
+
+  // Set last point velocity and acceleration to zero
+  std::fill(joint_trajectory.points.back().velocities.begin(),
+            joint_trajectory.points.back().velocities.end(),
+            0.0);
+  std::fill(joint_trajectory.points.back().accelerations.begin(),
+            joint_trajectory.points.back().accelerations.end(),
+            0.0);
 }
 
 
@@ -265,7 +273,7 @@ bool TrajectoryGeneratorPTP::extractMotionPlanInfo(const planning_interface::Mot
     geometry_msgs::Pose pose;
     pose.position = p;
     pose.orientation = req.goal_constraints.at(0).orientation_constraints.at(0).orientation;
-    Eigen::Affine3d pose_eigen;
+    Eigen::Isometry3d pose_eigen;
     tf::poseMsgToEigen(pose,pose_eigen);
     if(!computePoseIK(robot_model_,
                       req.group_name,
