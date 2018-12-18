@@ -16,24 +16,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <launch>
-    <!-- Parametrized test running with and without gripper! -->
-
-    <!-- Load the context with and without the pg70 -->
+    <!-- Load the context -->
     <include file="$(find prbt_moveit_config)/launch/test_context.launch" />
-    <include file="$(find prbt_moveit_config)/launch/test_context.launch">
-      <arg name="gripper" value="pg70" />
-    </include>
 
     <!-- run test -->
-    <test pkg="pilz_trajectory_generation" test-name="unittest_trajectory_generator_ptp"
-    type="unittest_trajectory_generator_ptp">
+    <test pkg="pilz_trajectory_generation" test-name="unittest_trajectory_appender"
+    type="unittest_trajectory_appender">
       <param name="planning_group" value="manipulator" />
       <param name="target_link" value="prbt_tcp" />
-      <param name="joint_position_tolerance" value="1.0e-8" />
-      <param name="joint_velocity_tolerance" value="1.0e-8" />
-      <param name="joint_acceleration_tolerance" value="1.0e-8" />
-      <param name="pose_norm_tolerance" value="1.0e-6" />
-      <rosparam command="load" file="$(find prbt_moveit_config)/config/joint_limits.yaml" />
     </test>
 
 </launch>

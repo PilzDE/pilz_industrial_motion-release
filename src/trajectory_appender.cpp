@@ -15,16 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CAPABILITY_NAMES_H
-#define CAPABILITY_NAMES_H
-
-#include <string>
+#include <pilz_trajectory_generation/trajectory_appender.h>
+#include <pilz_trajectory_generation/trajectory_functions.h>
 
 namespace pilz_trajectory_generation
 {
 
-static const std::string SEQUENCE_SERVICE_NAME = "plan_sequence_path";
-
+void TrajectoryAppender::merge(robot_trajectory::RobotTrajectory &result, const robot_trajectory::RobotTrajectory &source)
+{
+  if ( !result.empty() && pilz::isRobotStateEqual(result.getLastWayPoint(), source.getFirstWayPoint(),
+                                                  result.getGroupName(), ROBOT_STATE_EQUALITY_EPSILON) )
+  {
+    for (size_t i = 1; i < source.getWayPointCount(); ++i)
+    {
+      result.addSuffixWayPoint(source.getWayPoint(i), source.getWayPointDurationFromPrevious(i));
+    }
+  }
+  else
+  {
+    result.append(source, 0.0);
+  }
 }
 
-#endif // CAPABILITY_NAMES_H
+}  // namespace pilz_trajectory_generation
