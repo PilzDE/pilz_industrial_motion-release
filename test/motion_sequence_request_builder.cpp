@@ -15,16 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CAPABILITY_NAMES_H
-#define CAPABILITY_NAMES_H
+#include "motion_sequence_request_builder.h"
 
-#include <string>
-
-namespace pilz_trajectory_generation
+pilz_msgs::MotionSequenceRequest MotionSequenceRequestBuilder::build(
+  std::initializer_list<std::pair<moveit_msgs::MotionPlanRequest, double> > l)
 {
+  pilz_msgs::MotionSequenceRequest req_list;
 
-static const std::string SEQUENCE_SERVICE_NAME = "plan_sequence_path";
+  for(const auto& pair : l)
+  {
+    pilz_msgs::MotionSequenceItem req;
+    req.req = pair.first;
+    req.blend_radius = pair.second;
+    req_list.items.push_back(req);
+  }
 
+  return req_list;
 }
-
-#endif // CAPABILITY_NAMES_H
