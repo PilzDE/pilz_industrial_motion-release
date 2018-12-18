@@ -263,8 +263,10 @@ target_link_libraries(integrationtest_command_planning
 add_rostest(test/integrationtest_command_planning_with_gripper.test
   DEPENDENCIES integrationtest_command_planning )
 
-add_rostest(test/integrationtest_command_planning_abb_irb2400.test
-  DEPENDENCIES integrationtest_command_planning )
+# Tests with other robots only for kinetic (for now)
+
+#add_rostest(test/integrationtest_command_planning_abb_irb2400.test
+#  DEPENDENCIES integrationtest_command_planning )
 
 #add_rostest(test/integrationtest_command_planning_frankaemika_panda.test
 #  DEPENDENCIES integrationtest_command_planning )
