@@ -15,17 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOTION_BLEND_REQUEST_LIST_BUILDER_H
-#define MOTION_BLEND_REQUEST_LIST_BUILDER_H
+#ifndef TRAJECTORY_MERGER_H
+#define TRAJECTORY_MERGER_H
 
-#include <pilz_msgs/MotionBlendRequestList.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 
-class MotionBlendRequestListBuilder
+namespace pilz_trajectory_generation
+{
+
+/**
+ * @brief Base class for merging two trajectories.
+ */
+class TrajectoryMerger
 {
 public:
-  
-  pilz_msgs::MotionBlendRequestList
-  build(std::initializer_list<std::pair<moveit_msgs::MotionPlanRequest, double> > l);
+    /**
+     * @brief Merge trajectory into current result trajectory.
+     */
+    virtual void merge(robot_trajectory::RobotTrajectory &result, const robot_trajectory::RobotTrajectory &source) = 0;
 };
 
-#endif // MOTION_BLEND_REQUEST_LIST_BUILDER_H
+}  // namespace pilz_trajectory_generation
+
+#endif  // TRAJECTORY_MERGER_H
