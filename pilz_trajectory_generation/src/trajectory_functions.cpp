@@ -22,12 +22,13 @@
 bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
                          const std::string &group_name,
                          const std::string &link_name,
-                         const Eigen::Isometry3d &pose,
+                         const Eigen::Affine3d &pose,
                          const std::string &frame_id,
                          const std::map<std::string, double> &seed,
                          std::map<std::string, double> &solution,
                          bool check_self_collision,
-                         int max_attempt)
+                         int max_attempt,
+                         const double timeout)
 {
   if(!robot_model->hasJointModelGroup(group_name))
   {
@@ -54,31 +55,17 @@ bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
   // set the seed
   rstate.setVariablePositions(seed);
 
+  moveit::core::GroupStateValidityCallbackFn ik_constraint_function;
+  ik_constraint_function = boost::bind(&pilz::isStateColliding, check_self_collision, robot_model, _1, _2, _3);
+
   // call ik
-  // TODO: Should consider self collision already.
   if(rstate.setFromIK(robot_model->getJointModelGroup(group_name),
                       pose,
                       link_name,
-                      max_attempt))
+                      max_attempt,
+                      timeout,
+                      ik_constraint_function))
   {
-    // self collision checking
-    if(check_self_collision)
-    {
-      planning_scene::PlanningScene rscene(robot_model);
-      rscene.setCurrentState(rstate);
-      collision_detection::CollisionRequest collision_req;
-      collision_detection::CollisionResult collision_res;
-      rscene.checkSelfCollision(collision_req, collision_res);
-
-      // LCOV_EXCL_START
-      if(collision_res.collision)
-      {
-        ROS_ERROR("Inverse kinematics solution has self collision.");
-        return false;
-      }
-      // LCOV_EXCL_STOP
-    }
-
     // copy the solution
     for(const auto& joint_name : robot_model->getJointModelGroup(group_name)->getActiveJointModelNames())
     {
@@ -104,9 +91,10 @@ bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
                          const std::map<std::string, double> &seed,
                          std::map<std::string, double> &solution,
                          bool check_self_collision,
-                         int max_attempt)
+                         int max_attempt,
+                         const double timeout)
 {
-  Eigen::Isometry3d pose_eigen;
+  Eigen::Affine3d pose_eigen;
   tf::poseMsgToEigen(pose, pose_eigen);
   return computePoseIK(robot_model,
                        group_name,
@@ -116,13 +104,14 @@ bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
                        seed,
                        solution,
                        check_self_collision,
-                       max_attempt);
+                       max_attempt,
+                       timeout);
 }
 
 bool pilz::computeLinkFK(const moveit::core::RobotModelConstPtr &robot_model,
                          const std::string &link_name,
                          const std::map<std::string, double> &joint_state,
-                         Eigen::Isometry3d &pose)
+                         Eigen::Affine3d &pose)
 {
   // create robot state
   robot_state::RobotState rstate(robot_model);
@@ -232,7 +221,7 @@ bool pilz::generateJointTrajectory(const moveit::core::RobotModelConstPtr &robot
   time_samples.push_back(trajectory.Duration());
 
   // sample the trajectory and solve the inverse kinematics
-  Eigen::Isometry3d pose_sample;
+  Eigen::Affine3d pose_sample;
   std::map<std::string, double> ik_solution_last, ik_solution, joint_velocity_last;
   ik_solution_last = initial_joint_position;
   for(const auto& item: ik_solution_last)
@@ -606,4 +595,25 @@ bool pilz::intersectionFound(const Eigen::Vector3d &p_center,
                              const double &r)
 {
   return ((p_current - p_center).norm() <= r) && ((p_next - p_center).norm() >= r);
+}
+
+bool pilz::isStateColliding(const bool test_for_self_collision,
+                            const moveit::core::RobotModelConstPtr &robot_model,
+                            robot_state::RobotState* rstate,
+                            const robot_state::JointModelGroup * const group,
+                            const double * const ik_solution)
+{
+  if (!test_for_self_collision)
+  {
+    return true;
+  }
+
+  rstate->setJointGroupPositions(group, ik_solution);
+  rstate->update();
+  collision_detection::CollisionRequest collision_req;
+  collision_req.group_name = group->getName();
+  collision_detection::CollisionResult collision_res;
+  planning_scene::PlanningScene(robot_model).checkSelfCollision(collision_req, collision_res, *rstate);
+
+  return !collision_res.collision;
 }

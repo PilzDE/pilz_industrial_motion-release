@@ -2,9 +2,8 @@
 Changelog for package pilz_robot_programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.4.0 (2018-12-18)
+0.3.2 (2019-01-18)
 ------------------
-* Release Python-API from kinetic version 0.3.1
 
 0.3.1 (2018-12-17)
 ------------------

@@ -49,12 +49,13 @@ namespace pilz {
 bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string& group_name,
                    const std::string& link_name,
-                   const Eigen::Isometry3d& pose,
+                   const Eigen::Affine3d& pose,
                    const std::string& frame_id,
                    const std::map<std::string, double>& seed,
                    std::map<std::string, double>& solution,
                    bool check_self_collision = true,
-                   int max_attempt = 2);
+                   int max_attempt = 10,
+                   const double timeout = 0.005);
 
 bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string& group_name,
@@ -64,7 +65,8 @@ bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::map<std::string, double>& seed,
                    std::map<std::string, double>& solution,
                    bool check_self_collision = true,
-                   int max_attempt = 2);
+                   int max_attempt = 10,
+                   const double timeout = 0.005);
 
 /**
  * @brief compute the pose of a link at give robot state
@@ -77,13 +79,13 @@ bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
 bool computeLinkFK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string& link_name,
                    const std::map<std::string, double>& joint_state,
-                   Eigen::Isometry3d& pose);
+                   Eigen::Affine3d& pose);
 
 bool computeLinkFK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string& link_name,
                    const std::vector<std::string>& joint_names,
                    const std::vector<double>& joint_positions,
-                   Eigen::Isometry3d& pose);
+                   Eigen::Affine3d& pose);
 
 /**
  * @brief verify the velocity/acceleration limits of current sample (based on backward difference computation)
@@ -221,6 +223,23 @@ bool intersectionFound(const Eigen::Vector3d &p_center,
                        const Eigen::Vector3d &p_current,
                        const Eigen::Vector3d &p_next,
                        const double& r);
+
+/**
+ * @brief Checks if current robot state is in self collision.
+ * @param test_for_self_collision Flag to deactivate this check during IK.
+ * @param robot_model: robot kinematics model.
+ * @param state Robot state instance used for .
+ * @param group
+ * @param ik_solution
+ * @return
+ */
+bool isStateColliding(const bool test_for_self_collision,
+                      const moveit::core::RobotModelConstPtr &robot_model,
+                      robot_state::RobotState* state,
+                      const robot_state::JointModelGroup * const group,
+                      const double * const ik_solution);
 }
+
+
 
 #endif // TRAJECTORY_FUNCTIONS_H
