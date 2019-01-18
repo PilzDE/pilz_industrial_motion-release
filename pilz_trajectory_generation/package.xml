@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>pilz_trajectory_generation</name>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <description>The pilz_trajectory_generation package</description>
 
   <maintainer email="ros@pilz.de">Pilz GmbH and Co. KG</maintainer>
@@ -56,6 +56,7 @@
   <test_depend>panda_moveit_config</test_depend>
   <test_depend>abb_irb2400_moveit_config</test_depend>
   <test_depend>code_coverage</test_depend>
+  <test_depend>pilz_testutils</test_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
