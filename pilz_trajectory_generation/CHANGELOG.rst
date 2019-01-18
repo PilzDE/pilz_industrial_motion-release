@@ -2,6 +2,12 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.2 (2019-01-18)
+------------------
+* use pilz_testutils package for blend test
+* use collision-aware ik calculation
+* Contributors: Pilz GmbH and Co. KG
+
 0.3.1 (2018-12-17)
 ------------------
 
