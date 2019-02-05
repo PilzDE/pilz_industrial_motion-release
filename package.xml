@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>pilz_robot_programming</name>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
   <description>
   An Easy to use API to execute standard industrial robot commands like Ptp, Lin, Circ and Sequence using Moveit.
   </description>
@@ -17,6 +17,7 @@
   <run_depend>rospy</run_depend>
   <run_depend>pilz_trajectory_generation</run_depend>
   <run_depend>pilz_msgs</run_depend>
+  <run_depend>python-psutil</run_depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 
