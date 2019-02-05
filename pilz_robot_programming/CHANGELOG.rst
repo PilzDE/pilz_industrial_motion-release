@@ -2,6 +2,11 @@
 Changelog for package pilz_robot_programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.4 (2019-02-05)
+------------------
+* enable Robot instantiation after a program got killed; add corresponding test
+* Contributors: Pilz GmbH and Co. KG
+
 0.3.3 (2019-01-25)
 ------------------
 * apply renaming command_planner -> pilz_command_planner
