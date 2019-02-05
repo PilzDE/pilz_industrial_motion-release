@@ -24,9 +24,7 @@ bool pilz::TrajectoryBlenderTransitionWindow::blend(const pilz::TrajectoryBlendR
                                          pilz::TrajectoryBlendResponse& res)
 {
   ROS_INFO("Start trajectory blending using transition window.");
-  // search for intersection points of the two trajectories with the blending sphere
-  // intersection points belongs to blend trajectory after blending
-  // blend the trajectory
+
   double sampling_time = 0.;
   if(!validateRequest(req, sampling_time, res.error_code))
   {
@@ -34,6 +32,8 @@ bool pilz::TrajectoryBlenderTransitionWindow::blend(const pilz::TrajectoryBlendR
     return false;
   }
 
+  // search for intersection points of the two trajectories with the blending sphere
+  // intersection points belongs to blend trajectory after blending
   std::size_t first_intersection_index;
   std::size_t second_intersection_index;
   if(!searchIntersectionPoints(req, first_intersection_index, second_intersection_index))
@@ -100,11 +100,12 @@ bool pilz::TrajectoryBlenderTransitionWindow::blend(const pilz::TrajectoryBlendR
   // erase the points [first_intersection_index, back()] from the first trajectory
   for(size_t i = 0; i < first_intersection_index; ++i)
   {
-    res.first_trajectory->insertWayPoint(i,req.first_trajectory->getWayPoint(i), req.first_trajectory->getWayPointDurationFromPrevious(i));
+    res.first_trajectory->insertWayPoint(i, req.first_trajectory->getWayPoint(i),
+                                         req.first_trajectory->getWayPointDurationFromPrevious(i));
   }
 
   // append the blend trajectory
-  res.blend_trajectory->setRobotTrajectoryMsg(req.first_trajectory->getFirstWayPoint(), blend_joint_trajectory); // TODO: correct? unnecessary?
+  res.blend_trajectory->setRobotTrajectoryMsg(req.first_trajectory->getFirstWayPoint(), blend_joint_trajectory);
   // copy the points [second_intersection_index, len] from the second trajectory
   for(size_t i = second_intersection_index+1; i < req.second_trajectory->getWayPointCount(); ++i)
   {
@@ -125,6 +126,15 @@ bool pilz::TrajectoryBlenderTransitionWindow::validateRequest(const pilz::Trajec
                                                    moveit_msgs::MoveItErrorCodes &error_code) const
 {
   ROS_DEBUG("Validate the trajectory blend request.");
+
+  // check planning group
+  if (!req.first_trajectory->getRobotModel()->hasJointModelGroup(req.group_name))
+  {
+    ROS_ERROR_STREAM("Unknown planning group: " << req.group_name);
+    error_code.val = moveit_msgs::MoveItErrorCodes::INVALID_GROUP_NAME;
+    return false;
+  }
+
   if(req.blend_radius <=0 )
   {
     ROS_ERROR("Blending radius must be positive");
@@ -266,11 +276,10 @@ void pilz::TrajectoryBlenderTransitionWindow::determineTrajectoryAlignment(const
                                                                 std::size_t second_interse_index,
                                                                 std::size_t &blend_align_index) const
 {
-  double tau_1 = (req.first_trajectory->getWayPointDurationFromStart(req.first_trajectory->getWayPointCount()) -
-                  req.first_trajectory->getWayPointDurationFromStart(first_interse_index));
-  double tau_2 = req.second_trajectory->getWayPointDurationFromStart(second_interse_index);
+  size_t way_point_count_1 = req.first_trajectory->getWayPointCount() - first_interse_index;
+  size_t way_point_count_2 = second_interse_index+1;
 
-  if(tau_1 > tau_2)
+  if(way_point_count_1 > way_point_count_2)
   {
     blend_align_index = req.first_trajectory->getWayPointCount() - second_interse_index -1;
   }
