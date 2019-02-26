@@ -2,6 +2,10 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.6 (2019-02-26)
+------------------
+* refactor the testdataloader
+
 0.3.5 (2019-02-06)
 ------------------
 * Increase line coverage for blending to 100%
