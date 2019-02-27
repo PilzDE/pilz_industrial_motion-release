@@ -2,6 +2,25 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.1 (2019-02-27)
+------------------
+* refactor the testdataloader
+* adapt to new RobotState API: remove #attempts
+* Contributors: Pilz GmbH and Co. KG
+
+0.3.5 (2019-02-06)
+------------------
+* Increase line coverage for blending to 100%
+* refactor determining the trajectory alignment in the blend implementation
+* extend and refactor unittest of blender_transition_window
+* add planning group check to blender_transition_window
+* add more details to blend algorithm description
+* change handling of empty sequences in capabilities to be non-erroneous
+* rename command_planner -> pilz_command_planner
+* use pilz_testutils package for blend test
+* use collision-aware ik calculation
+* Contributors: Pilz GmbH and Co. KG
+
 0.4.0 (2018-12-18)
 ------------------
 * Use Eigen::Isometry3d to keep up with the recent changes in moveit
