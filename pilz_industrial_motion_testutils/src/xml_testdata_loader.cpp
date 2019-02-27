@@ -23,9 +23,33 @@
 
 #include "pilz_industrial_motion_testutils/default_values.h"
 
+#include "pilz_industrial_motion_testutils/exception_types.h"
+
 namespace pt = boost::property_tree;
 namespace pilz_industrial_motion_testutils
 {
+
+template<class CmdType>
+class CmdGetterAdapter : public XmlTestdataLoader::AbstractCmdGetterAdapter
+{
+public:
+  using FuncType = std::function<CmdType(const std::string&)>;
+
+  CmdGetterAdapter(FuncType func)
+    : AbstractCmdGetterAdapter()
+    , func_(func)
+  {
+  }
+
+public:
+  CmdVariant getCmd(const std::string& cmd_name) const override
+  {
+    return CmdVariant(func_(cmd_name));
+  }
+
+private:
+  FuncType func_;
+};
 
 XmlTestdataLoader::XmlTestdataLoader(const std::string &path_filename)
   : TestdataLoader()
@@ -33,7 +57,26 @@ XmlTestdataLoader::XmlTestdataLoader(const std::string &path_filename)
 {
   // Parse the XML into the property tree.
   pt::read_xml(path_filename_, tree_, pt::xml_parser::no_comments);
+
+  using std::placeholders::_1;
+  cmd_getter_funcs_["ptp"] = AbstractCmdGetterUPtr(new CmdGetterAdapter<PtpJoint>(std::bind(&XmlTestdataLoader::getPtpJoint, this, _1)));
+  cmd_getter_funcs_["ptp_joint_cart"] = AbstractCmdGetterUPtr(new CmdGetterAdapter<PtpJointCart>(std::bind(&XmlTestdataLoader::getPtpJointCart, this, _1)));
+  cmd_getter_funcs_["ptp_cart_cart"] = AbstractCmdGetterUPtr(new CmdGetterAdapter<PtpCart>(std::bind(&XmlTestdataLoader::getPtpCart, this, _1)));
+
+  cmd_getter_funcs_["lin"] = AbstractCmdGetterUPtr(new CmdGetterAdapter<LinJoint>(std::bind(&XmlTestdataLoader::getLinJoint, this, _1)));
+  cmd_getter_funcs_["lin_cart"] = AbstractCmdGetterUPtr(new CmdGetterAdapter<LinCart>(std::bind(&XmlTestdataLoader::getLinCart, this, _1)));
+
+  cmd_getter_funcs_["circ_center_cart"] = AbstractCmdGetterUPtr(new CmdGetterAdapter<CircCenterCart>(std::bind(&XmlTestdataLoader::getCircCartCenterCart, this, _1)));
+  cmd_getter_funcs_["circ_interim_cart"] = AbstractCmdGetterUPtr(new CmdGetterAdapter<CircInterimCart>(std::bind(&XmlTestdataLoader::getCircCartInterimCart, this, _1)));
 }
+
+XmlTestdataLoader::XmlTestdataLoader(const std::string &path_filename,
+                                     moveit::core::RobotModelConstPtr robot_model)
+  : XmlTestdataLoader(path_filename)
+{
+  setRobotModel(robot_model);
+}
+
 
 XmlTestdataLoader::~XmlTestdataLoader()
 {
@@ -63,7 +106,33 @@ const pt::ptree::value_type& XmlTestdataLoader::findNodeWithName(const boost::pr
   return empty_value_type_;
 }
 
-bool XmlTestdataLoader::getJoints(const std::string &pose_name, const std::string &group_name,
+const pt::ptree::value_type& XmlTestdataLoader::findNodeWithName(const boost::property_tree::ptree &tree,
+                                                                 const std::string &name,
+                                                                 const std::string &key,
+                                                                 const std::string& path) const
+{
+  std::string path_str {(path.empty()? NAME_PATH_STR : path)};
+
+  // Search for node with given name.
+  for (const pt::ptree::value_type& val : tree)
+  {
+    // Ignore attributes which are always the first element of a tree.
+    if (val.first == XML_ATTR_STR){ continue; }
+
+    if (val.first != key) {continue;}
+
+    const auto& node {val.second.get_child(path_str, empty_tree_)};
+    if (node == empty_tree_) { break; }
+    if (node.data() == name) { return val; }
+  }
+
+  std::string msg;
+  msg.append("Node of type \"").append(key).append("\" with ").
+      append(path_str).append("=\"").append(name).append("\" not found.");
+  throw TestDataLoaderReadingException(msg);
+}
+
+bool XmlTestdataLoader::getJoints(const std::string &pos_name, const std::string &group_name,
                                   std::vector<double> &dVec) const
 {
   // Search for node with given name.
@@ -74,10 +143,10 @@ bool XmlTestdataLoader::getJoints(const std::string &pose_name, const std::strin
     ROS_ERROR("No poses found.");
     return false;
   }
-  const pt::ptree::value_type& pose_node { findNodeWithName(poses_tree, pose_name, ok) };
+  const pt::ptree::value_type& pose_node { findNodeWithName(poses_tree, pos_name, ok) };
   if (!ok)
   {
-    ROS_ERROR_STREAM("Pos '" << pose_name << "' not found.");
+    ROS_ERROR_STREAM("Pos '" << pos_name << "' not found.");
     return false;
   }
 
@@ -109,7 +178,34 @@ bool XmlTestdataLoader::getJoints(const std::string &pose_name, const std::strin
   return true;
 }
 
-bool XmlTestdataLoader::getPose(const std::string &pose_name, const std::string &group_name,
+JointConfiguration XmlTestdataLoader::getJoints(const std::string &pos_name,
+                                                const std::string &group_name) const
+{
+  // Search for node with given name.
+  const auto& poses_tree {tree_.get_child(POSES_PATH_STR, empty_tree_)};
+  if (poses_tree == empty_tree_)
+  {
+    throw TestDataLoaderReadingException("No poses found.");
+  }
+  return getJoints(findNodeWithName(poses_tree, pos_name, POSE_STR).second, group_name);
+}
+
+JointConfiguration XmlTestdataLoader::getJoints(const boost::property_tree::ptree& joints_tree,
+                                                const std::string &group_name) const
+{
+  // Search joints node with given group_name.
+  if (joints_tree == empty_tree_)
+  {
+    throw TestDataLoaderReadingException("No joints found.");
+  }
+  const auto& joint_node {findNodeWithName(joints_tree, group_name, JOINT_STR, GROUP_NAME_PATH_STR)};
+
+  std::vector<std::string> strs;
+  boost::split(strs,  joint_node.second.data(), boost::is_any_of(" "));
+  return JointConfiguration(group_name, strVec2doubleVec(strs), robot_model_);
+}
+
+bool XmlTestdataLoader::getPose(const std::string &pos_name, const std::string &group_name,
                                 std::vector<double> &dVec) const
 {
   // Search for node with given name.
@@ -120,10 +216,10 @@ bool XmlTestdataLoader::getPose(const std::string &pose_name, const std::string 
     ROS_ERROR("No poses found.");
     return false;
   }
-  const pt::ptree::value_type& pose_node { findNodeWithName(poses_tree, pose_name, ok) };
+  const pt::ptree::value_type& pose_node { findNodeWithName(poses_tree, pos_name, ok) };
   if (!ok)
   {
-    ROS_ERROR_STREAM("Pos '" << pose_name << "' not found.");
+    ROS_ERROR_STREAM("Pos '" << pos_name << "' not found.");
     return false;
   }
 
@@ -153,11 +249,108 @@ bool XmlTestdataLoader::getPose(const std::string &pose_name, const std::string 
   boost::split(strs,  xyzQuat_tree.data(), boost::is_any_of(" "));
   strVec2doubleVec(strs, dVec);
 
-//  const boost::property_tree::ptree& linkNode = xyzEuler_tree.get_child(LINK_NAME_PATH_STR, empty_tree_);
-//  if (linkNode == empty_tree_) { return false; }
-//  link_name = linkNode.data();
+  //  const boost::property_tree::ptree& linkNode = xyzEuler_tree.get_child(LINK_NAME_PATH_STR, empty_tree_);
+  //  if (linkNode == empty_tree_) { return false; }
+  //  link_name = linkNode.data();
 
   return true;
+}
+
+CartesianConfiguration XmlTestdataLoader::getPose(const std::string &pos_name,
+                                                  const std::string &group_name) const
+{
+  const auto& all_poses_tree {tree_.get_child(POSES_PATH_STR, empty_tree_)};
+  if (all_poses_tree == empty_tree_)
+  {
+    throw TestDataLoaderReadingException("No poses found.");
+  }
+  const auto& pose_tree {findNodeWithName(all_poses_tree, pos_name, POSE_STR).second};
+  const auto& xyzQuat_tree {findNodeWithName(pose_tree, group_name, XYZ_QUAT_STR, GROUP_NAME_PATH_STR).second};
+  const boost::property_tree::ptree& link_name_attr {xyzQuat_tree.get_child(LINK_NAME_PATH_STR, empty_tree_)};
+  if (link_name_attr == empty_tree_)
+  {
+    throw TestDataLoaderReadingException("No link name found.");
+  }
+  std::string link_name {link_name_attr.data()};
+
+  // Get rid of things like "\n", etc.
+  std::string data {xyzQuat_tree.data()};
+  boost::trim(data);
+
+  std::vector<std::string> posOri_str;
+  boost::split(posOri_str, data, boost::is_any_of(" "));
+  CartesianConfiguration cart_config { CartesianConfiguration(group_name, link_name,
+                                                              strVec2doubleVec(posOri_str), robot_model_)};
+
+  const auto& seeds_tree {xyzQuat_tree.get_child(SEED_STR, empty_tree_)};
+  if (seeds_tree != empty_tree_)
+  {
+    cart_config.setSeed(getJoints(seeds_tree, group_name));
+  }
+  return cart_config;
+}
+
+PtpJoint XmlTestdataLoader::getPtpJoint(const std::string& cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(PTPS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Did not find \"" + cmd_name +  "\"");
+  }
+
+  PtpJoint cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getJoints(start_pos_name, planning_group));
+  cmd.setGoalConfiguration(getJoints(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
+PtpJointCart XmlTestdataLoader::getPtpJointCart(const std::string& cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(PTPS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Did not find \"" + cmd_name +  "\"");
+  }
+
+  PtpJointCart cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getJoints(start_pos_name, planning_group));
+  cmd.setGoalConfiguration(getPose(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
+PtpCart XmlTestdataLoader::getPtpCart(const std::string& cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(PTPS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Did not find \"" + cmd_name +  "\"");
+  }
+
+  PtpCart cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getPose(start_pos_name, planning_group));
+  cmd.setGoalConfiguration(getPose(goal_pos_name, planning_group));
+
+  return cmd;
 }
 
 bool XmlTestdataLoader::getLin(const std::string &cmd_name, STestMotionCommand &cmd) const
@@ -182,6 +375,69 @@ bool XmlTestdataLoader::getLin(const std::string &cmd_name, STestMotionCommand &
   }
 }
 
+LinJoint XmlTestdataLoader::getLinJoint(const std::string& cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(LINS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Could not load \"" + cmd_name +  "\"");
+  }
+
+  LinJoint cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getJoints(start_pos_name, planning_group));
+  cmd.setGoalConfiguration(getJoints(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
+LinCart XmlTestdataLoader::getLinCart(const std::string& cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(LINS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Could not load \"" + cmd_name +  "\"");
+  }
+
+  LinCart cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getPose(start_pos_name, planning_group));
+  cmd.setGoalConfiguration(getPose(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
+LinJointCart XmlTestdataLoader::getLinJointCart(const std::string& cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(LINS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Could not load \"" + cmd_name +  "\"");
+  }
+
+  LinJointCart cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getJoints(start_pos_name, planning_group));
+  cmd.setGoalConfiguration(getPose(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
 const pt::ptree::value_type& XmlTestdataLoader::findCmd(const std::string &cmd_name,
                                                         const std::string &cmd_type,
                                                         bool &ok) const
@@ -203,12 +459,26 @@ const pt::ptree::value_type& XmlTestdataLoader::findCmd(const std::string &cmd_n
   return cmd_node;
 }
 
+const pt::ptree::value_type & XmlTestdataLoader::findCmd(const std::string &cmd_name,
+                                                         const std::string& cmd_path,
+                                                         const std::string &cmd_key) const
+{
+  // Search for node with given name.
+  const boost::property_tree::ptree& cmds_tree {tree_.get_child(cmd_path, empty_tree_)};
+  if (cmds_tree == empty_tree_)
+  {
+    throw TestDataLoaderReadingException("No list of commands of type \"" + cmd_key +  "\" found");
+  }
+
+  return findNodeWithName(cmds_tree, cmd_name, cmd_key);
+}
+
 bool XmlTestdataLoader::getCmd(const std::string &path2cmd,
                                const std::string &cmd_name,
                                std::string &group_name,
                                std::string &target_link,
-                               std::string& start_pose_name,
-                               std::string& end_pose_name,
+                               std::string& start_pos_name,
+                               std::string& end_pos_name,
                                double &vel,
                                double &acc) const
 {
@@ -230,15 +500,15 @@ bool XmlTestdataLoader::getCmd(const std::string &path2cmd,
     return false;
   }
 
-  start_pose_name = cmd_node.second.get<std::string>(START_POS_STR, empty_str_);
-  if (start_pose_name.empty())
+  start_pos_name = cmd_node.second.get<std::string>(START_POS_STR, empty_str_);
+  if (start_pos_name.empty())
   {
     ROS_ERROR("No start pos found.");
     return false;
   }
 
-  end_pose_name = cmd_node.second.get<std::string>(END_POS_STR, empty_str_);
-  if (end_pose_name.empty())
+  end_pos_name = cmd_node.second.get<std::string>(END_POS_STR, empty_str_);
+  if (end_pos_name.empty())
   {
     ROS_ERROR("No end pos found.");
     return false;
@@ -255,7 +525,7 @@ bool XmlTestdataLoader::getCirc(const std::string &cmd_name, STestMotionCommand 
   // get start and goal
   std::string start_pos_name, goal_pos_name;
   if(!getCmd(CIRCS_PATH_STR, cmd_name, cmd.planning_group, cmd.target_link,
-            start_pos_name, goal_pos_name, cmd.vel_scale, cmd.acc_scale))
+             start_pos_name, goal_pos_name, cmd.vel_scale, cmd.acc_scale))
   {
     ROS_ERROR_STREAM(cmd_name << " does not exist.");
     return false;
@@ -311,16 +581,116 @@ bool XmlTestdataLoader::getCirc(const std::string &cmd_name, STestMotionCommand 
   return true;
 }
 
-bool XmlTestdataLoader::getSequence(const std::string &cmd_name,
-                                    std::vector<SSequenceCmd> &seq_cmds) const
+CartesianCenter XmlTestdataLoader::getCartesianCenter(const std::string &cmd_name,
+                                                      const std::string &planning_group) const
 {
-  // Find sequence cmd with given name
-  bool ok {false};
-  const pt::ptree::value_type &sequence_node { findCmd(cmd_name, SEQUENCE_PATH_STR, ok) };
-  if (!ok){ return false; }
+  const pt::ptree::value_type &cmd_node { findCmd(cmd_name, CIRCS_PATH_STR, CIRC_STR) };
+  std::string aux_pos_name;
+  try
+  {
+    aux_pos_name = cmd_node.second.get<std::string>(CENTER_POS_STR);
+  }
+  catch(...)
+  {
+    throw TestDataLoaderReadingException("Did not find center of circ");
+  }
 
-  // Loop over all sequence cmds.
-  const auto& sequence_cmd_tree = sequence_node.second;
+  CartesianCenter aux;
+  aux.setConfiguration(getPose(aux_pos_name, planning_group));
+  return aux;
+}
+
+CartesianInterim XmlTestdataLoader::getCartesianInterim(const std::string &cmd_name,
+                                                        const std::string &planning_group) const
+{
+  const pt::ptree::value_type &cmd_node { findCmd(cmd_name, CIRCS_PATH_STR, CIRC_STR) };
+  std::string aux_pos_name;
+  try
+  {
+    aux_pos_name = cmd_node.second.get<std::string>(INTERMEDIATE_POS_STR);
+  }
+  catch(...)
+  {
+    throw TestDataLoaderReadingException("Did not find interim of circ");
+  }
+
+  CartesianInterim aux;
+  aux.setConfiguration(getPose(aux_pos_name, planning_group));
+  return aux;
+}
+
+CircCenterCart XmlTestdataLoader::getCircCartCenterCart(const std::string &cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(CIRCS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Did not \"" + cmd_name +  "\"");
+  }
+
+  CircCenterCart cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getPose(start_pos_name, planning_group));
+  cmd.setAuxiliaryConfiguration(getCartesianCenter(cmd_name, planning_group));
+  cmd.setGoalConfiguration(getPose(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
+CircInterimCart XmlTestdataLoader::getCircCartInterimCart(const std::string &cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(CIRCS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Did not \"" + cmd_name +  "\"");
+  }
+
+  CircInterimCart cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getPose(start_pos_name, planning_group));
+  cmd.setAuxiliaryConfiguration(getCartesianInterim(cmd_name, planning_group));
+  cmd.setGoalConfiguration(getPose(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
+CircJointCenterCart XmlTestdataLoader::getCircJointCenterCart(const std::string &cmd_name) const
+{
+  std::string start_pos_name, goal_pos_name, planning_group, target_link;
+  double vel_scale, acc_scale;
+  if(!getCmd(CIRCS_PATH_STR, cmd_name, planning_group, target_link,
+             start_pos_name, goal_pos_name, vel_scale, acc_scale))
+  {
+    throw TestDataLoaderReadingException("Did not \"" + cmd_name +  "\"");
+  }
+
+  CircJointCenterCart cmd;
+  cmd.setPlanningGroup(planning_group);
+  cmd.setVelocityScale(vel_scale);
+  cmd.setAccelerationScale(acc_scale);
+
+  cmd.setStartConfiguration(getJoints(start_pos_name, planning_group));
+  cmd.setAuxiliaryConfiguration(getCartesianCenter(cmd_name, planning_group));
+  cmd.setGoalConfiguration(getJoints(goal_pos_name, planning_group));
+
+  return cmd;
+}
+
+Sequence XmlTestdataLoader::getSequence(const std::string &cmd_name) const
+{
+  Sequence seq;
+
+  // Find sequence with given name and loop over all its cmds
+  const auto& sequence_cmd_tree {findCmd(cmd_name, SEQUENCE_PATH_STR, BLEND_STR).second};
   for (const pt::ptree::value_type& seq_cmd : sequence_cmd_tree)
   {
     // Ignore attributes which are always the first element of a tree.
@@ -330,28 +700,27 @@ bool XmlTestdataLoader::getSequence(const std::string &cmd_name,
     const boost::property_tree::ptree& cmd_name_attr = seq_cmd.second.get_child(NAME_PATH_STR, empty_tree_);
     if (cmd_name_attr == empty_tree_)
     {
-      ROS_ERROR("Did not find name of sequence cmd.");
-      return false;
+      throw TestDataLoaderReadingException("Did not find name of sequence cmd");
     }
-    SSequenceCmd sequence_cmd_data;
-    sequence_cmd_data.cmd_name = cmd_name_attr.data();
 
-    // Get type of blend cmd.
-    const boost::property_tree::ptree& type_name_attr = seq_cmd.second.get_child(CMD_TYPE_PATH_STR, empty_tree_);
+    std::string cmd_name {cmd_name_attr.data()};
+
+    // Get type of blend cmd
+    const boost::property_tree::ptree& type_name_attr {seq_cmd.second.get_child(CMD_TYPE_PATH_STR, empty_tree_)};
     if (type_name_attr == empty_tree_)
     {
-      ROS_ERROR_STREAM("Did not find type of sequence cmd '" << sequence_cmd_data.cmd_name << "'." );
-      return false;
+      throw TestDataLoaderReadingException("Did not find type of sequence cmd \"" + cmd_name +  "\"");
     }
-    sequence_cmd_data.cmd_type = type_name_attr.data();
+    std::string cmd_type {type_name_attr.data()};
 
     // Get blend radius of blend cmd.
-    sequence_cmd_data.blend_radius = seq_cmd.second.get<double>(BLEND_RADIUS_PATH_STR, DEFAULT_BLEND_RADIUS);
+    double blend_radius {seq_cmd.second.get<double>(BLEND_RADIUS_PATH_STR, DEFAULT_BLEND_RADIUS)};
 
-    // Add blend cmd to container.
-    seq_cmds.push_back(sequence_cmd_data);
+    // Read current command from test data + Add command to sequence
+    seq.add(cmd_getter_funcs_.at(cmd_type)->getCmd(cmd_name), blend_radius);
   }
-  return true;
+
+  return seq;
 }
 
 
