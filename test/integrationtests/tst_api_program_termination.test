@@ -39,13 +39,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <arg name="info" value="true"/>
     <arg name="debug" value="$(arg debug)"/>
     <arg name="gripper" value="$(arg gripper)"/>
-    <arg name="capabilities" value="pilz_trajectory_generation/MoveGroupSequenceAction
-                                    pilz_trajectory_generation/MoveGroupSequenceService"/>
+    <arg name="pipeline" value="pilz_command_planner" />
   </include>
 
   <!-- test node -->
-  <test test-name="test_api_program_kill" pkg="pilz_robot_programming"
-    type="tst_api_program_kill.py" time-limit="25"
-    launch-prefix="$(arg pythontest_launch_prefix)" />
+  <test test-name="test_api_program_termination" pkg="pilz_robot_programming"
+    type="tst_api_program_termination.py" launch-prefix="$(arg pythontest_launch_prefix)" />
 
 </launch>
