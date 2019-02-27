@@ -84,7 +84,7 @@ protected:
    * @param epsilon
    * @return
    */
-  bool tfNear(const Eigen::Affine3d& pose1, const Eigen::Affine3d& pose2, const double& epsilon);
+  bool tfNear(const Eigen::Isometry3d& pose1, const Eigen::Isometry3d& pose2, const double& epsilon);
 
 
 protected:
@@ -124,7 +124,7 @@ void TrajectoryFunctionsTestBase::SetUp()
   }
 }
 
-bool TrajectoryFunctionsTestBase::tfNear(const Eigen::Affine3d& pose1, const Eigen::Affine3d& pose2, const double& epsilon)
+bool TrajectoryFunctionsTestBase::tfNear(const Eigen::Isometry3d& pose1, const Eigen::Isometry3d& pose2, const double& epsilon)
 {
   for(std::size_t i=0; i<3; ++i)
     for(std::size_t j=0; j<4; ++j)
@@ -162,7 +162,7 @@ INSTANTIATE_TEST_CASE_P(InstantiationName, TrajectoryFunctionsTestOnlyGripper, :
  */
 TEST_P(TrajectoryFunctionsTestFlangeAndGripper, TipLinkFK)
 {
-  Eigen::Affine3d tip_pose;
+  Eigen::Isometry3d tip_pose;
   std::map<std::string, double> test_state = zero_state_;
   EXPECT_TRUE(pilz::computeLinkFK(robot_model_, group_tip_link_, test_state, tip_pose));
   EXPECT_NEAR(tip_pose(0,3),0,EPSILON);
@@ -261,7 +261,7 @@ TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testIKRobotState)
     // sample random robot state
     rstate.setToRandomPositions(jmg, rng_);
 
-    Eigen::Affine3d pose_expect = rstate.getFrameTransform(tcp_link_);
+    Eigen::Isometry3d pose_expect = rstate.getFrameTransform(tcp_link_);
 
     // copy the random state and set ik seed
     std::map<std::string, double> ik_seed, ik_expect;
@@ -297,7 +297,7 @@ TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testIKRobotState)
     // compute the pose from ik_solution
     rstate.setVariablePositions(ik_actual);
     rstate.update();
-    Eigen::Affine3d pose_actual = rstate.getFrameTransform(tcp_link_);
+    Eigen::Isometry3d pose_actual = rstate.getFrameTransform(tcp_link_);
 
     EXPECT_TRUE(tfNear(pose_expect,pose_actual,EPSILON));
 
@@ -321,7 +321,7 @@ TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIK)
     // sample random robot state
     rstate.setToRandomPositions(jmg, rng_);
 
-    Eigen::Affine3d pose_expect = rstate.getFrameTransform(tcp_link_);
+    Eigen::Isometry3d pose_expect = rstate.getFrameTransform(tcp_link_);
 
     // copy the random state and set ik seed
     std::map<std::string, double> ik_seed, ik_expect;
@@ -365,7 +365,7 @@ TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIK)
 TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIKInvalidGroupName)
 {
   const std::string frame_id = robot_model_->getModelFrame();
-  Eigen::Affine3d pose_expect;
+  Eigen::Isometry3d pose_expect;
 
   std::map<std::string, double> ik_seed;
 
@@ -387,7 +387,7 @@ TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIKInvalidGroupNam
 TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIKInvalidLinkName)
 {
   const std::string frame_id = robot_model_->getModelFrame();
-  Eigen::Affine3d pose_expect;
+  Eigen::Isometry3d pose_expect;
 
   std::map<std::string, double> ik_seed;
 
@@ -410,7 +410,7 @@ TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIKInvalidLinkName
  */
 TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIKInvalidFrameId)
 {
-  Eigen::Affine3d pose_expect;
+  Eigen::Isometry3d pose_expect;
 
   std::map<std::string, double> ik_seed;
 
@@ -452,7 +452,7 @@ TEST_P(TrajectoryFunctionsTestOnlyGripper, testComputePoseIKSelfCollisionForVali
   pose.position.z = 0.431;
   pose.orientation.y = 0.991562;
   pose.orientation.w = -0.1296328;
-  Eigen::Affine3d pose_expect;
+  Eigen::Isometry3d pose_expect;
   normalizeQuaternion(pose.orientation);
   tf::poseMsgToEigen(pose, pose_expect);
 
@@ -535,7 +535,7 @@ TEST_P(TrajectoryFunctionsTestFlangeAndGripper, testComputePoseIKSelfCollisionFo
 
   rstate.setJointGroupPositions(jmg, ik_goal);
 
-  Eigen::Affine3d pose_expect = rstate.getFrameTransform(tcp_link_);
+  Eigen::Isometry3d pose_expect = rstate.getFrameTransform(tcp_link_);
 
   // compute the ik with disabled collision check
   std::map<std::string, double> ik_actual;

@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <package>
   <name>pilz_trajectory_generation</name>
-  <version>0.3.6</version>
+  <version>0.4.1</version>
   <description>The pilz_trajectory_generation package containing the MoveIt! plugin pilz_command_planner.</description>
 
-  <maintainer email="a.gutenkunst@pilz.de">Alexander Gutenkunst</maintainer>
+ <maintainer email="a.gutenkunst@pilz.de">Alexander Gutenkunst</maintainer>
+  <maintainer email="c.henkel@pilz.de">Christian Henkel</maintainer>
   <maintainer email="h.slusarek@pilz.de">Hagen Slusarek</maintainer>
   <maintainer email="i.martini@pilz.de">Immanuel Martini</maintainer>
 
@@ -30,6 +31,7 @@
   <build_depend>pilz_msgs</build_depend>
   <build_depend>moveit_ros_planning_interface</build_depend>
   <build_depend>pilz_testutils</build_depend>
+  <build_depend>kdl_conversions</build_depend>
 
   <run_depend>orocos_kdl</run_depend>
   <run_depend>roscpp</run_depend>
@@ -56,8 +58,8 @@
   <test_depend>prbt_moveit_config</test_depend>
   <test_depend>prbt_support</test_depend>
   <test_depend>prbt_pg70_support</test_depend>
-  <test_depend>panda_moveit_config</test_depend>
-  <test_depend>abb_irb2400_moveit_config</test_depend>
+  <!-- <test_depend>panda_moveit_config</test_depend> -->         <!-- only needed in kinetic -->
+  <!-- <test_depend>abb_irb2400_moveit_config</test_depend> -->         <!-- only needed in kinetic -->
   <test_depend>code_coverage</test_depend>
 
 

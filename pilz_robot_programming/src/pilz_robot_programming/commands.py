@@ -129,7 +129,7 @@ class _AbstractCmd(object):
 
 
 class _BaseCmd(_AbstractCmd):
-    """Base class for all single commands."""
+    """Base class for all single commands (gripper command excluded)."""
     def __init__(self, goal=None, planning_group=_DEFAULT_PLANNING_GROUP, target_link=_DEFAULT_TARGET_LINK,
                  vel_scale=_DEFAULT_VEL_SCALE, acc_scale=_DEFAULT_ACC_SCALE, relative=False,
                  reference_frame=_DEFAULT_BASE_LINK):
@@ -472,7 +472,7 @@ class Circ(_BaseCmd):
 
     :param target_link: Name of the target link if Cartesian goal is given, default as "prbt_tcp"
 
-    :param interim: Position in cartesian space (geometry_msgs/Point),
+    :param interim: Position in cartesian space (geometry_msgs/Position),
         which lies on the circle on which the robot is supposed to move.
         The position has to lie between the current position of the robot and the goal position.
         The interim position indicates in which direction of the circle the robot is supposed to move.
@@ -599,14 +599,13 @@ class Sequence(_AbstractCmd):
 
     def append(self, cmd, blend_radius=0):
         """Adds the given robot motion command to the sequence. Currently, blending is only supported
-        for :py:class:`Lin` commands, however other commands can be used in a sequence if the blend radius is 0 (except
-        for the :py:class:`Gripper` command).
+        for :py:class:`Lin` commands, however other commands can be used in a sequence if the blend radius is 0.
 
         :param cmd: The robot motion command which has to be added to the sequence.
             The blending happens between the specified command and the command following the specified command
             if a non-zero blend_radius is defined. Otherwise, if the blend radius is 0, the commands will
             execute consecutively.
-        :type cmd: :py:class:`pilz_robot_programming.commands._BaseCmd`
+        :type cmd: :py:class:`Lin`
 
         :param blend_radius: The blending radius states how much the robot trajectory can deviate from the
             original trajectory (trajectory without blending) to blend the robot motion from one trajectory to the next.

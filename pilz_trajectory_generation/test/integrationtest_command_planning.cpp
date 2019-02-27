@@ -192,17 +192,17 @@ TEST_F(IntegrationTestCommandPlanning, PtpJointCart)
   robot_state::RobotState rstate(robot_model_);
   rstate.setJointGroupPositions(planning_group_,response.trajectory.joint_trajectory.points.back().positions);
   rstate.update();
-  Eigen::Affine3d tf = rstate.getFrameTransform(target_link_);
+  Eigen::Isometry3d tf = rstate.getFrameTransform(target_link_);
 
   const geometry_msgs::Pose& expected_pose {ptp.getGoalConfiguration().getPose()};
   EXPECT_NEAR(tf(0,3), expected_pose.position.x, EPSILON);
   EXPECT_NEAR(tf(1,3), expected_pose.position.y, EPSILON);
   EXPECT_NEAR(tf(2,3), expected_pose.position.z, EPSILON);
 
-  Eigen::Affine3d exp_aff3d_pose;
-  tf::poseMsgToEigen(expected_pose, exp_aff3d_pose);
+  Eigen::Isometry3d exp_iso3d_pose;
+  tf::poseMsgToEigen(expected_pose, exp_iso3d_pose);
 
-  EXPECT_TRUE(Eigen::Quaterniond(tf.rotation()).isApprox(Eigen::Quaterniond(exp_aff3d_pose.rotation()), EPSILON));
+  EXPECT_TRUE(Eigen::Quaterniond(tf.rotation()).isApprox(Eigen::Quaterniond(exp_iso3d_pose.rotation()), EPSILON));
 }
 
 /**
@@ -372,7 +372,7 @@ TEST_F(IntegrationTestCommandPlanning, CircJointCenterCart)
 
   // check all waypoints are on the circle and SLERP
   robot_state::RobotState waypoint_state(robot_model_);
-  Eigen::Affine3d waypoint_pose;
+  Eigen::Isometry3d waypoint_pose;
   double x_dist, y_dist, z_dist;
 
   const geometry_msgs::Pose& aux_pose {circ.getAuxiliaryConfiguration().getConfiguration().getPose()};
@@ -398,10 +398,10 @@ TEST_F(IntegrationTestCommandPlanning, CircJointCenterCart)
     EXPECT_NEAR(actual_radius, expected_radius, pose_norm_tolerance_) << "Trajectory way point is not on the circle.";
 
     // Check orientation
-    Eigen::Affine3d start_pose_aff3d, goal_pose_aff3d;
-    tf::poseMsgToEigen(start_pose, start_pose_aff3d);
-    tf::poseMsgToEigen(goal_pose, goal_pose_aff3d);
-    EXPECT_TRUE( testutils::checkSLERP(start_pose_aff3d, goal_pose_aff3d, waypoint_pose, orientation_norm_tolerance_) );
+    Eigen::Isometry3d start_pose_iso3d, goal_pose_iso3d;
+    tf::poseMsgToEigen(start_pose, start_pose_iso3d);
+    tf::poseMsgToEigen(goal_pose, goal_pose_iso3d);
+    EXPECT_TRUE( testutils::checkSLERP(start_pose_iso3d, goal_pose_iso3d, waypoint_pose, orientation_norm_tolerance_) );
   }
 }
 
@@ -456,7 +456,7 @@ TEST_F(IntegrationTestCommandPlanning, CircCartCenterCart)
 
   // check all waypoints are on the cricle and SLERP
   robot_state::RobotState waypoint_state(robot_model_);
-  Eigen::Affine3d waypoint_pose;
+  Eigen::Isometry3d waypoint_pose;
   double x_dist, y_dist, z_dist;
 
   const geometry_msgs::Pose& start_pose {circ.getStartConfiguration().getPose()};
@@ -480,11 +480,11 @@ TEST_F(IntegrationTestCommandPlanning, CircCartCenterCart)
     EXPECT_NEAR(actual_radius, expected_radius, pose_norm_tolerance_) << "Trajectory way point is not on the circle.";
 
     // Check orientation
-    Eigen::Affine3d start_pose_aff3d, goal_pose_aff3d;
-    tf::poseMsgToEigen(start_pose, start_pose_aff3d);
-    tf::poseMsgToEigen(goal_pose, goal_pose_aff3d);
-    EXPECT_TRUE(testutils::checkSLERP(start_pose_aff3d,
-                                      goal_pose_aff3d,
+    Eigen::Isometry3d start_pose_iso3d, goal_pose_iso3d;
+    tf::poseMsgToEigen(start_pose, start_pose_iso3d);
+    tf::poseMsgToEigen(goal_pose, goal_pose_iso3d);
+    EXPECT_TRUE(testutils::checkSLERP(start_pose_iso3d,
+                                      goal_pose_iso3d,
                                       waypoint_pose,
                                       orientation_norm_tolerance_));
   }

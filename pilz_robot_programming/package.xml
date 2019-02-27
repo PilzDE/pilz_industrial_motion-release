@@ -1,14 +1,12 @@
 <?xml version="1.0"?>
 <package>
   <name>pilz_robot_programming</name>
-  <version>0.3.6</version>
+  <version>0.4.1</version>
   <description>
   An Easy to use API to execute standard industrial robot commands like Ptp, Lin, Circ and Sequence using Moveit.
   </description>
 
-  <maintainer email="a.gutenkunst@pilz.de">Alexander Gutenkunst</maintainer>
-  <maintainer email="h.slusarek@pilz.de">Hagen Slusarek</maintainer>
-  <maintainer email="i.martini@pilz.de">Immanuel Martini</maintainer>
+  <maintainer email="ros@pilz.de">Pilz GmbH and Co. KG</maintainer>
 
   <license>LGPLv3</license>
 
@@ -18,6 +16,7 @@
   <run_depend>pilz_trajectory_generation</run_depend>
   <run_depend>pilz_msgs</run_depend>
   <run_depend>python-psutil</run_depend>
+  <run_depend>tf_conversions</run_depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 
