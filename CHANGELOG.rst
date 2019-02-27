@@ -2,6 +2,21 @@
 Changelog for package pilz_industrial_motion_testutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.1 (2019-02-27)
+------------------
+
+0.3.6 (2019-02-26)
+------------------
+
+0.3.5 (2019-02-06)
+------------------
+
+0.3.4 (2019-02-05)
+------------------
+* Add high level abstraction data classes to represent configuration of robot
+* Add high level abstraction data classes to represent different command types
+* Add functions to TestdataLoader returning the high level abstraction classes
+
 0.4.0 (2018-12-18)
 ------------------
 * Use Eigen::Isometry3d to keep up with the recent changes in moveit
