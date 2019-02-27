@@ -338,8 +338,8 @@ TEST_P(IntegrationTestCommandListManager, emptyList)
 {
   pilz_msgs::MotionSequenceRequest empty_list;
   planning_interface::MotionPlanResponse res;
-  ASSERT_FALSE(manager_->solve(scene_, empty_list, res));
-  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN, res.error_code_.val);
+  ASSERT_TRUE(manager_->solve(scene_, empty_list, res));
+  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::SUCCESS, res.error_code_.val);
   EXPECT_EQ(0u, res.trajectory_->getWayPointCount());
 }
 
@@ -381,7 +381,7 @@ TEST_P(IntegrationTestCommandListManager, startStateNotFirstGoal)
   req.items[1].req.start_state.joint_state = testutils::generateJointState({-1., 2., -3., 4., -5., 0.});
   planning_interface::MotionPlanResponse res;
   ASSERT_FALSE(manager_->solve(scene_, req, res));
-  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::START_STATE_VIOLATES_PATH_CONSTRAINTS, res.error_code_.val);
+  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::INVALID_ROBOT_STATE, res.error_code_.val);
   EXPECT_EQ(0u, res.trajectory_->getWayPointCount());
 }
 
@@ -402,7 +402,7 @@ TEST_P(IntegrationTestCommandListManager, blendingRadiusNegative)
   req.items[0].blend_radius = -0.3;
   planning_interface::MotionPlanResponse res;
   ASSERT_FALSE(manager_->solve(scene_, req, res));
-  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::FAILURE, res.error_code_.val);
+  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN, res.error_code_.val);
   EXPECT_EQ(0u, res.trajectory_->getWayPointCount());
 }
 
@@ -423,7 +423,7 @@ TEST_P(IntegrationTestCommandListManager, lastBlendingRadiusNonZero)
   req.items[1].blend_radius = 0.03;
   planning_interface::MotionPlanResponse res;
   ASSERT_FALSE(manager_->solve(scene_, req, res));
-  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::FAILURE, res.error_code_.val);
+  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN, res.error_code_.val);
   EXPECT_EQ(0u, res.trajectory_->getWayPointCount());
 }
 
@@ -473,13 +473,13 @@ TEST_P(IntegrationTestCommandListManager, blendingRadiusOverlapping)
 
   // calculate distance from first to second goal
   planning_interface::MotionPlanResponse res_overlap;
-  Eigen::Affine3d p1, p2;
+  Eigen::Isometry3d p1, p2;
   tf2::fromMsg(req.items[0].req.goal_constraints[0].position_constraints[0].constraint_region.primitive_poses[0], p1);
   tf2::fromMsg(req.items[1].req.goal_constraints[0].position_constraints[0].constraint_region.primitive_poses[0], p2);
   auto distance = (p2.translation()-p1.translation()).norm();
   req.items[1].blend_radius = distance - req.items[0].blend_radius + 0.01; // overlapping radii
   ASSERT_FALSE(manager_->solve(scene_, req, res_overlap));
-  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::FAILURE, res_overlap.error_code_.val);
+  EXPECT_EQ(moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN, res_overlap.error_code_.val);
   EXPECT_EQ(0u, res_overlap.trajectory_->getWayPointCount());
 }
 
