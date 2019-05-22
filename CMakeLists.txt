@@ -29,7 +29,7 @@ catkin_python_setup()
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS moveit_core moveit_msgs
+  CATKIN_DEPENDS moveit_core moveit_msgs pilz_msgs
   DEPENDS Boost
 )
 
@@ -52,8 +52,6 @@ include_directories(
    src/jointconfiguration.cpp
    src/cartesianconfiguration.cpp
    src/sequence.cpp
-   src/motion_plan_request_builder.cpp
-   src/motion_plan_request_director.cpp
 )
 
 ## Specify libraries to link a library or executable target against
