@@ -13,7 +13,7 @@ This package implements the `planning_interface::PlannerManager` interface of Mo
 planning pipeline (`pilz_command_planner_planning_pipeline.launch.xml` in `prbt_moveit_config` package), the trajectory
 generation functionalities can be accessed through the user interface (c++, python or rviz) provided by
 the `move_group` node, e.g. `/plan_kinematics_path` service and `/move_group` action. For detailed tutorials please
-refer to [MoveIt! Tutorials](http://docs.ros.org/indigo/api/moveit_tutorials/html/index.html).
+refer to [MoveIt! Tutorials](http://docs.ros.org/melodic/api/moveit_tutorials/html/index.html).
 
 ## Joint Limits
 For all commands the planner needs to know the limitations of each robot joint.
@@ -51,16 +51,16 @@ As defined by the user interface of MoveIt!, this package uses `moveit_msgs::Mot
 comprehensive and general. The parameters needed by specific planning algorithm are explained below in detail.
 
 For a general introduction how to fill a `MotionPlanRequest` see the
-[Move Group Interface Tutorial](http://docs.ros.org/kinetic/api/moveit_tutorials/html/doc/pr2_tutorials/planning/src/doc/move_group_interface_tutorial.html).
+[Move Group Interface Tutorial](http://docs.ros.org/melodic/api/moveit_tutorials/html/doc/move_group_interface/move_group_interface_tutorial.html#planning-to-a-pose-goal).
 
 The planner is able to handle all the different commands. Just put "PTP", "LIN" or "CIRC" as planner_id in
 the motion request.
 
 ## The PTP motion command
-This planner generates full synchronized point to point trajectories with trapezoid joint velocity profile. All joints
+This planner generates full synchronized point to point trajectories with trapezoidal joint velocity profile. All joints
 are assumed to have the same maximal joint velocity/acceleration/deceleration limits. If not, the strictest limits are
 adopted. The axis with the longest time to reach the goal is selected as the lead axis.
-Other axes are accelerated so that they share the same acceleration/constant velocity/deceleration phases
+Other axes are decelerated so that they share the same acceleration/constant velocity/deceleration phases
 as the lead axis.
 
 ![ptp no vel](doc/figure/ptp.png)
@@ -130,11 +130,12 @@ motion plan fails due to violation of joint space limits.
 
 
 ## The CIRC motion command
-This planner generates an circular arc trajectory in Cartesian space between goal and start poses. The center point of
-the circle or a interim point on the arc needs to be given as path constraint. The planner always generates the shorter
-arc between start and goal poses and cannot generate half circle in case of given center point. The planner cannot generate
-full circle. The Cartesian limits, namely translational/rotational velocity/acceleration/deceleration need to be set
-and the planner uses these limits to generate a trapezoid velocity profile in Cartesian space. The rotational motion is
+This planner generates a circular arc trajectory in Cartesian space between goal and start poses. There are two options for giving a path constraint:
+ - the *center* point of the circle: The planner always generates the shorter arc between start and goal and cannot generate a half circle,
+ - an *interim* point on the arc: The generated trajectory always goes through the interim point. The planner cannot generate a full circle.
+
+The Cartesian limits, namely translational/rotational velocity/acceleration/deceleration need to be set
+and the planner uses these limits to generate a trapezoidal velocity profile in Cartesian space. The rotational motion is
 quaternion slerp between start and goal orientation. The translational and rotational motion is synchronized in time.
 This planner only accepts start state with zero velocity. Planning result is a joint trajectory. The user needs to adapt
 the Cartesian velocity/acceleration scaling factor if motion plan fails due to violation of joint limits.
@@ -189,11 +190,16 @@ The limits are expected to be under the namespace `<robot_description>_planning`
 E.g. if the urdf was loaded into `/robot_description` the cartesian limits have to be defined at `/robot_description_planning`.
 
 An example showing the cartesian limits which have to be defined can be found
-![here](https://github.com/PilzDE/pilz_robots/blob/kinetic-devel/prbt_moveit_config/config/cartesian_limits.yaml).
+![here](https://github.com/PilzDE/pilz_robots/blob/melodic-devel/prbt_moveit_config/config/cartesian_limits.yaml).
 
 # Sequence of multiple segments
 To concatenate multiple trajectories and plan the trajectory at once, you can use the sequence capability.
 This reduces the planning overhead and allows to follow a pre-desribed path without stopping at intermediate points.
+
+**Please note:** In case the planning of a command in a sequence fails,
+non of the commands in the sequence are executed.
+
+**Please note:** Sequences commands are allowed to contain commands for multiple groups (e.g. "Manipulator", "Gripper")
 
 ## User interface sequence capability
 A specialized MoveIt! capability takes a
