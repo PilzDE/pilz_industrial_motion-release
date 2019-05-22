@@ -22,11 +22,12 @@
 bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
                          const std::string &group_name,
                          const std::string &link_name,
-                         const Eigen::Isometry3d &pose,
+                         const Eigen::Affine3d &pose,
                          const std::string &frame_id,
                          const std::map<std::string, double> &seed,
                          std::map<std::string, double> &solution,
                          bool check_self_collision,
+                         int max_attempt,
                          const double timeout)
 {
   if(!robot_model->hasJointModelGroup(group_name))
@@ -60,6 +61,7 @@ bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
   if(rstate.setFromIK(robot_model->getJointModelGroup(group_name),
                       pose,
                       link_name,
+                      max_attempt,
                       timeout,
                       ik_constraint_function))
   {
@@ -88,9 +90,10 @@ bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
                          const std::map<std::string, double> &seed,
                          std::map<std::string, double> &solution,
                          bool check_self_collision,
+                         int max_attempt,
                          const double timeout)
 {
-  Eigen::Isometry3d pose_eigen;
+  Eigen::Affine3d pose_eigen;
   tf::poseMsgToEigen(pose, pose_eigen);
   return computePoseIK(robot_model,
                        group_name,
@@ -100,13 +103,14 @@ bool pilz::computePoseIK(const moveit::core::RobotModelConstPtr &robot_model,
                        seed,
                        solution,
                        check_self_collision,
+                       max_attempt,
                        timeout);
 }
 
 bool pilz::computeLinkFK(const moveit::core::RobotModelConstPtr &robot_model,
                          const std::string &link_name,
                          const std::map<std::string, double> &joint_state,
-                         Eigen::Isometry3d &pose)
+                         Eigen::Affine3d &pose)
 {
   // create robot state
   robot_state::RobotState rstate(robot_model);
@@ -216,7 +220,7 @@ bool pilz::generateJointTrajectory(const moveit::core::RobotModelConstPtr &robot
   time_samples.push_back(trajectory.Duration());
 
   // sample the trajectory and solve the inverse kinematics
-  Eigen::Isometry3d pose_sample;
+  Eigen::Affine3d pose_sample;
   std::map<std::string, double> ik_solution_last, ik_solution, joint_velocity_last;
   ik_solution_last = initial_joint_position;
   for(const auto& item: ik_solution_last)
