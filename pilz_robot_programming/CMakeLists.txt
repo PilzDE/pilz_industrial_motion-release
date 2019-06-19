@@ -11,11 +11,10 @@ catkin_package()
 
 catkin_python_setup()
 
-install(PROGRAMS
+catkin_install_python(PROGRAMS
    examples/demo_program.py
    examples/demo_gripper_program.py
-   src/${PROJECT_NAME}/commands.py
-   src/${PROJECT_NAME}/robot.py
+   examples/demo_brake_test_program.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
