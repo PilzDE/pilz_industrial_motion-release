@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2018 Pilz GmbH & Co. KG
+# Copyright (c) 2019 Pilz GmbH & Co. KG
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -19,24 +19,20 @@ from pilz_robot_programming.commands import *
 
 __REQUIRED_API_VERSION__ = "1"
 
-# Gripper position in [m], stated for one finger,
-# i.e. opening width = 2*gripper_pos
-_GRIPPER_CLOSED = 0.0
-_GRIPPER_OPEN = 0.02
-
 
 def start_program():
     print("Executing " +__file__)
 
     r = Robot(__REQUIRED_API_VERSION__)
 
-    # Gripper command execution as single command
-    r.move(Gripper(goal=_GRIPPER_CLOSED))
-
-    # Gripper command execution in sequence
-    seq = Sequence()
-    seq.append(Gripper(goal=_GRIPPER_OPEN))
-    r.move(seq)
+    # Execute a brake test if required
+    if r.is_brake_test_required():
+        try:
+            r.execute_brake_test()
+        except RobotBrakeTestException as e:
+            rospy.logerr(e)
+        except rospy.ROSException as e:
+            rospy.logerr("failed to call the service")
 
 
 if __name__ == "__main__":
