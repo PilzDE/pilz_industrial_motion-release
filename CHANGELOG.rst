@@ -2,6 +2,9 @@
 Changelog for package pilz_industrial_motion_testutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.4 (2019-06-19)
+------------------
+
 0.4.3 (2019-04-08)
 ------------------
 * update package dependencies
