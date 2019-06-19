@@ -130,7 +130,7 @@ inline moveit_msgs::Constraints generateJointConstraint(const std::vector<double
 bool getExpectedGoalPose(const moveit::core::RobotModelConstPtr &robot_model,
                          const planning_interface::MotionPlanRequest &req,
                          std::string& link_name,
-                         Eigen::Affine3d &goal_pose_expect);
+                         Eigen::Isometry3d &goal_pose_expect);
 
 /**
  * @brief create a dummy motion plan request with zero start state
@@ -201,9 +201,9 @@ bool checkCartesianLinearity(const robot_model::RobotModelConstPtr& robot_model,
  * @param rot_axis_norm_tolerance
  * @return
  */
-bool checkSLERP(const Eigen::Affine3d& start_pose,
-                const Eigen::Affine3d& goal_pose,
-                const Eigen::Affine3d& wp_pose,
+bool checkSLERP(const Eigen::Isometry3d& start_pose,
+                const Eigen::Isometry3d& goal_pose,
+                const Eigen::Isometry3d& wp_pose,
                 const double rot_axis_norm_tolerance,
                 const double rot_angle_tolerance=10e-5);
 
@@ -301,7 +301,7 @@ bool toTCPPose(const moveit::core::RobotModelConstPtr &robot_model,
 bool computeLinkFK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string &link_name,
                    const std::map<std::string, double> &joint_state,
-                   Eigen::Affine3d &pose);
+                   Eigen::Isometry3d &pose);
 
 
 
@@ -336,7 +336,7 @@ bool checkBlendingCartSpaceContinuity(const pilz::TrajectoryBlendRequest& req,
  */
 bool checkThatPointsInRadius(const std::string &link_name,
                              const double& r,
-                             Eigen::Affine3d &circ_pose,
+                             Eigen::Isometry3d &circ_pose,
                              const pilz::TrajectoryBlendResponse& res);
 
 /**
@@ -347,8 +347,8 @@ bool checkThatPointsInRadius(const std::string &link_name,
  * @param v
  * @param w
  */
-void computeCartVelocity(const Eigen::Affine3d pose_1,
-                         const Eigen::Affine3d pose_2,
+void computeCartVelocity(const Eigen::Isometry3d pose_1,
+                         const Eigen::Isometry3d pose_2,
                          double duration,
                          Eigen::Vector3d& v,
                          Eigen::Vector3d& w);
