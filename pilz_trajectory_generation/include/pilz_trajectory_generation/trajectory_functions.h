@@ -50,11 +50,12 @@ namespace pilz {
 bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string& group_name,
                    const std::string& link_name,
-                   const Eigen::Isometry3d& pose,
+                   const Eigen::Affine3d& pose,
                    const std::string& frame_id,
                    const std::map<std::string, double>& seed,
                    std::map<std::string, double>& solution,
                    bool check_self_collision = true,
+                   int max_attempt = 10,
                    const double timeout = 0.1);
 
 bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
@@ -65,6 +66,7 @@ bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::map<std::string, double>& seed,
                    std::map<std::string, double>& solution,
                    bool check_self_collision = true,
+                   int max_attempt = 10,
                    const double timeout = 0.1);
 
 /**
@@ -78,13 +80,13 @@ bool computePoseIK(const robot_model::RobotModelConstPtr& robot_model,
 bool computeLinkFK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string& link_name,
                    const std::map<std::string, double>& joint_state,
-                   Eigen::Isometry3d& pose);
+                   Eigen::Affine3d& pose);
 
 bool computeLinkFK(const robot_model::RobotModelConstPtr& robot_model,
                    const std::string& link_name,
                    const std::vector<std::string>& joint_names,
                    const std::vector<double>& joint_positions,
-                   Eigen::Isometry3d& pose);
+                   Eigen::Affine3d& pose);
 
 /**
  * @brief verify the velocity/acceleration limits of current sample (based on backward difference computation)
@@ -165,17 +167,6 @@ bool determineAndCheckSamplingTime(const robot_trajectory::RobotTrajectoryPtr& f
                                    double& sampling_time);
 
 /**
- * @brief Deprecated, do not use this function signature anymore.
- *
- * @deprecated use the other function signature taking const references to the robot states.
- *
- */
-bool isRobotStateEqual(const robot_state::RobotStatePtr& state1,
-                       const robot_state::RobotStatePtr& state2,
-                       const std::string& joint_group_name,
-                       double epsilon);
-
-/**
  * @brief Check if the two robot states have the same joint position/velocity/acceleration.
  *
  * @param joint_group_name The name of the joint group.
@@ -196,7 +187,7 @@ bool isRobotStateEqual(const robot_state::RobotState& state1,
  * @param EPSILON
  * @return
  */
-bool isRobotStateStationary(const robot_state::RobotStatePtr& state,
+bool isRobotStateStationary(const robot_state::RobotState& state,
                             const std::string& group,
                             double EPSILON);
 

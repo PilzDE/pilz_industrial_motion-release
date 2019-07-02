@@ -242,14 +242,14 @@ add_rostest_gmock(integrationtest_sequence_action_capability_with_gripper
 target_link_libraries(integrationtest_sequence_action_capability_with_gripper
    ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES} ${PROJECT_NAME}_test)
 
-# Tests with other robots only for kinetic (for now)
+add_rostest_gmock(integrationtest_sequence_action_capability_abb_irb2400
+  test/integrationtest_sequence_action_capability_abb_irb2400.test
+  test/integrationtest_sequence_action_capability.cpp
+)
+target_link_libraries(integrationtest_sequence_action_capability_abb_irb2400
+  ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES} ${PROJECT_NAME}_test)
 
-#add_rostest_gmock(integrationtest_sequence_action_capability_abb_irb2400
-#  test/integrationtest_sequence_action_capability_abb_irb2400.test
-#  test/integrationtest_sequence_action_capability.cpp
-#)
-#target_link_libraries(integrationtest_sequence_action_capability_abb_irb2400
-#  ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES} ${PROJECT_NAME}_test)
+# Comment unstable panda test for now
 
 #add_rostest_gmock(integrationtest_sequence_action_capability_frankaemika_panda
 #  test/integrationtest_sequence_action_capability_frankaemika_panda.test
@@ -265,13 +265,11 @@ add_rostest_gtest(integrationtest_sequence_service_capability
 target_link_libraries(integrationtest_sequence_service_capability
   ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
-# Tests with other robots only for kinetic (for now)
-
 #add_rostest(test/integrationtest_sequence_service_capability_frankaemika_panda.test
 #  DEPENDENCIES integrationtest_sequence_service_capability )
 
-#add_rostest(test/integrationtest_sequence_service_capability_abb_irb2400.test
-#  DEPENDENCIES integrationtest_sequence_service_capability )
+add_rostest(test/integrationtest_sequence_service_capability_abb_irb2400.test
+  DEPENDENCIES integrationtest_sequence_service_capability )
 
 add_rostest_gtest(integrationtest_sequence_service_capability_with_gripper
   test/integrationtest_sequence_service_capability_with_gripper.test
@@ -291,10 +289,8 @@ target_link_libraries(integrationtest_command_planning
 add_rostest(test/integrationtest_command_planning_with_gripper.test
   DEPENDENCIES integrationtest_command_planning )
 
-# Tests with other robots only for kinetic (for now)
-
-#add_rostest(test/integrationtest_command_planning_abb_irb2400.test
-#  DEPENDENCIES integrationtest_command_planning )
+add_rostest(test/integrationtest_command_planning_abb_irb2400.test
+  DEPENDENCIES integrationtest_command_planning )
 
 #add_rostest(test/integrationtest_command_planning_frankaemika_panda.test
 #  DEPENDENCIES integrationtest_command_planning )
@@ -307,11 +303,11 @@ add_rostest_gtest(integrationtest_command_list_manager
 target_link_libraries(integrationtest_command_list_manager
 ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
-add_rostest_gtest(integrationtest_get_tip_frame
-  test/integrationtest_get_tip_frame.test
-  test/integrationtest_get_tip_frame.cpp
+add_rostest_gtest(integrationtest_get_solver_tip_frame
+  test/integrationtest_get_solver_tip_frame.test
+  test/integrationtest_get_solver_tip_frame.cpp
 )
-target_link_libraries(integrationtest_get_tip_frame
+target_link_libraries(integrationtest_get_solver_tip_frame
 ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
 add_rostest_gtest(integrationtest_plan_components_builder
@@ -461,6 +457,14 @@ ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
   target_link_libraries(unittest_planning_context
      ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
+
+  # GetTipFrames Unit Test
+  catkin_add_gmock(unittest_get_solver_tip_frame
+    test/unittest_get_solver_tip_frame.cpp
+  )
+
+  target_link_libraries(unittest_get_solver_tip_frame
+    ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
   # to run: catkin_make -DENABLE_COVERAGE_TESTING=ON package_name_coverage
   if(ENABLE_COVERAGE_TESTING)
