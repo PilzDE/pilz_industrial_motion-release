@@ -2,6 +2,10 @@
 Changelog for package pilz_robot_programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.8 (2019-07-02)
+------------------
+* Add python api methods for brake tests
+
 0.3.7 (2019-05-09)
 ------------------
 
