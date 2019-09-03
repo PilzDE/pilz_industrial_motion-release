@@ -2,16 +2,25 @@
 Changelog for package pilz_robot_programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.3.8 (2019-07-02)
+0.4.5 (2019-09-03)
+------------------
+* fix PEP issues
+* Contributors: Pilz GmbH and Co. KG
+
+0.4.4 (2019-06-19)
 ------------------
 * Add python api methods for brake tests
 
-0.3.7 (2019-05-09)
+0.4.3 (2019-04-08)
 ------------------
 
-0.3.6 (2019-02-26)
+0.4.2 (2019-03-13)
+------------------
+
+0.4.1 (2019-02-27)
 ------------------
 * Minor fixes
+* Contributors: Pilz GmbH and Co. KG
 
 0.3.5 (2019-02-06)
 ------------------
@@ -19,14 +28,12 @@ Changelog for package pilz_robot_programming
 0.3.4 (2019-02-05)
 ------------------
 * enable Robot instantiation after a program got killed; add corresponding test
+* apply renaming command_planner -> pilz_command_planner
 * Contributors: Pilz GmbH and Co. KG
 
-0.3.3 (2019-01-25)
+0.4.0 (2018-12-18)
 ------------------
-* apply renaming command_planner -> pilz_command_planner
-
-0.3.2 (2019-01-18)
-------------------
+* Release Python-API from kinetic version 0.3.1
 
 0.3.1 (2018-12-17)
 ------------------

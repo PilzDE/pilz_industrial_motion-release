@@ -91,7 +91,7 @@ moveit_msgs::RobotState CartesianConfiguration::toMoveitMsgsRobotState() const
   rstate.update();
 
   // set to Cartesian pose
-  Eigen::Affine3d start_pose;
+  Eigen::Isometry3d start_pose;
   tf::poseMsgToEigen(pose_, start_pose);
   if(!rstate.setFromIK(rstate.getRobotModel()->getJointModelGroup(group_name_), start_pose, link_name_))
   {
@@ -115,4 +115,4 @@ std::ostream& operator<< (std::ostream& os, const CartesianConfiguration& obj)
   return os;
 }
 
-}
+} // namespace pilz_industrial_motion_testutils
