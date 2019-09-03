@@ -1,3 +1,32 @@
+## pilz_industrial_motion (melodic) - 0.4.5-1
+
+The packages in the `pilz_industrial_motion` repository were released into the `melodic` distro by running `/usr/bin/bloom-release pilz_industrial_motion --rosdistro melodic` on `Tue, 03 Sep 2019 08:00:04 -0000`
+
+These packages were released:
+- `pilz_extensions`
+- `pilz_industrial_motion`
+- `pilz_industrial_motion_testutils`
+- `pilz_msgs`
+- `pilz_robot_programming`
+- `pilz_trajectory_generation`
+
+Version of package(s) in repository `pilz_industrial_motion`:
+
+- upstream repository: https://github.com/PilzDE/pilz_industrial_motion.git
+- release repository: https://github.com/PilzDE/pilz_industrial_motion-release.git
+- rosdistro version: `0.4.4-1`
+- old version: `0.4.4-1`
+- new version: `0.4.5-1`
+
+Versions of tools used:
+
+- bloom version: `0.8.0`
+- catkin_pkg version: `0.4.13`
+- rosdep version: `0.15.2`
+- rosdistro version: `0.7.4`
+- vcstools version: `0.1.42`
+
+
 ## pilz_industrial_motion (kinetic) - 0.3.8-0
 
 The packages in the `pilz_industrial_motion` repository were released into the `kinetic` distro by running `/usr/local/bin/bloom-release pilz_industrial_motion --track kinetic --rosdistro kinetic` on `Tue, 02 Jul 2019 08:31:11 -0000`
