@@ -26,10 +26,23 @@ find_package(catkin REQUIRED COMPONENTS
   kdl_conversions
 )
 
-
-
 find_package(orocos_kdl)
 find_package(Boost REQUIRED COMPONENTS )
+
+################
+## Clang tidy ##
+################
+find_program(
+  CLANG_TIDY_EXE
+  NAMES "clang-tidy-6.0"
+  DOC "Path to clang-tidy executable"
+  )
+if(NOT CLANG_TIDY_EXE)
+  message(FATAL_ERROR "clang-tidy-6.0 not found.")
+else()
+  message(STATUS "clang-tidy-6.0 found: ${CLANG_TIDY_EXE}")
+  set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+endif()
 
 ###################################
 ## catkin specific configuration ##
@@ -44,10 +57,16 @@ catkin_package(
 ###########
 ## Build ##
 ###########
+
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
+)
+
+# To avoid Warnings from clang-tidy declare system
+include_directories(
+  SYSTEM
   ${Boost_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -307,11 +326,11 @@ add_rostest_gtest(integrationtest_command_list_manager
 target_link_libraries(integrationtest_command_list_manager
 ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
-add_rostest_gtest(integrationtest_get_tip_frame
-  test/integrationtest_get_tip_frame.test
-  test/integrationtest_get_tip_frame.cpp
+add_rostest_gtest(integrationtest_get_solver_tip_frame
+  test/integrationtest_get_solver_tip_frame.test
+  test/integrationtest_get_solver_tip_frame.cpp
 )
-target_link_libraries(integrationtest_get_tip_frame
+target_link_libraries(integrationtest_get_solver_tip_frame
 ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
 add_rostest_gtest(integrationtest_plan_components_builder
@@ -461,6 +480,14 @@ ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
   target_link_libraries(unittest_planning_context
      ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
+
+  # GetTipFrames Unit Test
+  catkin_add_gmock(unittest_get_solver_tip_frame
+    test/unittest_get_solver_tip_frame.cpp
+  )
+
+  target_link_libraries(unittest_get_solver_tip_frame
+    ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
   # to run: catkin_make -DENABLE_COVERAGE_TESTING=ON package_name_coverage
   if(ENABLE_COVERAGE_TESTING)
