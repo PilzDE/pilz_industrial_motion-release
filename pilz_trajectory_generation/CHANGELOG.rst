@@ -2,6 +2,9 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.6 (2019-09-04)
+------------------
+
 0.4.5 (2019-09-03)
 ------------------
 * Adapt to changes in pilz_robots
