@@ -52,8 +52,7 @@ static std::string createJointName(const size_t& joint_number)
 class IntegrationTestSequenceService : public ::testing::Test
 {
 protected:
-  virtual void SetUp();
-  virtual void TearDown() {}
+  void SetUp() override;
 
 protected:
   ros::NodeHandle ph_ {"~"};
@@ -312,8 +311,8 @@ TEST_F(IntegrationTestSequenceService, TestLargeRequest)
   // Make copy of sequence commands and add them to the end of sequence.
   // Create large request by making copies of the original sequence commands
   // and adding them to the end of the original sequence.
-  size_t N {req.items.size()};
-  for(size_t i = 0; i<N; ++i)
+  size_t n {req.items.size()};
+  for(size_t i = 0; i<n; ++i)
   {
     pilz_msgs::MotionSequenceItem item {req.items.at(i)};
     if (i == 0)
@@ -331,7 +330,7 @@ TEST_F(IntegrationTestSequenceService, TestLargeRequest)
   ASSERT_TRUE(client_.call(srv));
 
   EXPECT_EQ(moveit_msgs::MoveItErrorCodes::SUCCESS, srv.response.error_code.val) << "Incorrect error code.";
-  EXPECT_EQ(srv.response.planned_trajectory.size(), 1);
+  EXPECT_EQ(srv.response.planned_trajectory.size(), 1u);
   EXPECT_GT(srv.response.planned_trajectory.front().joint_trajectory.points.size(), 0u) << "Trajectory should contain points.";
 }
 
@@ -359,7 +358,7 @@ TEST_F(IntegrationTestSequenceService, TestComplexSequenceWithoutBlending)
   ASSERT_TRUE(client_.call(srv));
 
   EXPECT_EQ(moveit_msgs::MoveItErrorCodes::SUCCESS, srv.response.error_code.val) << "Incorrect error code.";
-  EXPECT_EQ(srv.response.planned_trajectory.size(), 1);
+  EXPECT_EQ(srv.response.planned_trajectory.size(), 1u);
   EXPECT_GT(srv.response.planned_trajectory.front().joint_trajectory.points.size(), 0u) << "Trajectory should contain points.";
 }
 
@@ -385,14 +384,14 @@ TEST_F(IntegrationTestSequenceService, TestComplexSequenceWithBlending)
   ASSERT_TRUE(client_.call(srv));
 
   EXPECT_EQ(moveit_msgs::MoveItErrorCodes::SUCCESS, srv.response.error_code.val) << "Incorrect error code.";
-  EXPECT_EQ(srv.response.planned_trajectory.size(), 1);
+  EXPECT_EQ(srv.response.planned_trajectory.size(), 1u);
   EXPECT_GT(srv.response.planned_trajectory.front().joint_trajectory.points.size(), 0u) << "Trajectory should contain points.";
 }
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "integrationtest_sequence_service_capability");
-  ros::NodeHandle nh();
+  ros::NodeHandle nh;
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

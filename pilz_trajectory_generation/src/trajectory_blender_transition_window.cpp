@@ -155,7 +155,7 @@ bool pilz::TrajectoryBlenderTransitionWindow::validateRequest(const pilz::Trajec
   if(!pilz::isRobotStateEqual(req.first_trajectory->getLastWayPoint(),
                               req.second_trajectory->getFirstWayPoint(),
                               req.group_name,
-                              EPSILON))
+                              epsilon))
   {
     ROS_ERROR_STREAM("During blending the last point (" << req.first_trajectory->getLastWayPoint()
                      << " of the preceding and the first point of the succeding trajectory ("
@@ -167,7 +167,7 @@ bool pilz::TrajectoryBlenderTransitionWindow::validateRequest(const pilz::Trajec
   // same uniform sampling time
   if (!pilz::determineAndCheckSamplingTime(req.first_trajectory,
                                            req.second_trajectory,
-                                           EPSILON,
+                                           epsilon,
                                            sampling_time))
   {
 
@@ -176,8 +176,8 @@ bool pilz::TrajectoryBlenderTransitionWindow::validateRequest(const pilz::Trajec
   }
 
   //end position of the first trajectory and start position of second trajectory must have zero velocities/accelerations
-  if(!pilz::isRobotStateStationary(req.first_trajectory->getLastWayPoint(), req.group_name, EPSILON) ||
-     !pilz::isRobotStateStationary(req.second_trajectory->getFirstWayPoint(), req.group_name, EPSILON) )
+  if(!pilz::isRobotStateStationary(req.first_trajectory->getLastWayPoint(), req.group_name, epsilon) ||
+     !pilz::isRobotStateStationary(req.second_trajectory->getFirstWayPoint(), req.group_name, epsilon) )
   {
     ROS_ERROR("Intersection point of the blending trajectories has non-zero velocities/accelerations.");
     error_code.val = moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN;
@@ -199,11 +199,11 @@ void pilz::TrajectoryBlenderTransitionWindow::blendTrajectoryCartesian(const pil
   trajectory.link_name = req.link_name;
 
   // Pose on first trajectory
-  Eigen::Affine3d blend_sample_pose1
+  Eigen::Isometry3d blend_sample_pose1
       = req.first_trajectory->getWayPoint(first_interse_index).getFrameTransform(req.link_name);
 
   // Pose on second trajectory
-  Eigen::Affine3d blend_sample_pose2
+  Eigen::Isometry3d blend_sample_pose2
       = req.second_trajectory->getWayPoint(second_interse_index).getFrameTransform(req.link_name);
 
   // blend the trajectory
@@ -213,7 +213,7 @@ void pilz::TrajectoryBlenderTransitionWindow::blendTrajectoryCartesian(const pil
   blend_sample_pose2 = req.second_trajectory->getFirstWayPoint().getFrameTransform(req.link_name);
 
   // Pose on blending trajectory
-  Eigen::Affine3d  blend_sample_pose;
+  Eigen::Isometry3d  blend_sample_pose;
   for(std::size_t i = 0; i < blend_sample_num; ++i)
   {
     // if the first trajectory does not reach the last sample, update
@@ -258,7 +258,7 @@ bool pilz::TrajectoryBlenderTransitionWindow::searchIntersectionPoints(const pil
 
   // compute the position of the center of the blend sphere
   // (last point of the first trajectory, first point of the second trajectory)
-  Eigen::Affine3d circ_pose = req.first_trajectory->getLastWayPoint().getFrameTransform(req.link_name);
+  Eigen::Isometry3d circ_pose = req.first_trajectory->getLastWayPoint().getFrameTransform(req.link_name);
 
   // Searh for intersection points according to distance
   if(!linearSearchIntersectionPoint(req.link_name, circ_pose.translation(), req.blend_radius,

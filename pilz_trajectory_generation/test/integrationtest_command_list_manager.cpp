@@ -71,7 +71,7 @@ static std::string createGripperJointName(const size_t& joint_number)
 class IntegrationTestCommandListManager : public testing::Test
 {
 protected:
-  virtual void SetUp();
+  void SetUp() override;
 
 protected:
   // ros stuff
@@ -331,11 +331,11 @@ TEST_F(IntegrationTestCommandListManager, blendTwoSegments)
   ros::Duration duration(1.0); // wait to notify possible subscribers
   duration.sleep();
 
-  moveit_msgs::DisplayTrajectory displayTrajectory;
+  moveit_msgs::DisplayTrajectory display_trajectory;
   moveit_msgs::RobotTrajectory rob_traj_msg;
   res_vec.front()->getRobotTrajectoryMsg(rob_traj_msg);
-  displayTrajectory.trajectory.push_back(rob_traj_msg);
-  pub.publish(displayTrajectory);
+  display_trajectory.trajectory.push_back(rob_traj_msg);
+  pub.publish(display_trajectory);
 }
 
 // ------------------
@@ -475,7 +475,7 @@ TEST_F(IntegrationTestCommandListManager, blendingRadiusOverlapping)
   // calculate distance from first to second goal
   const PtpJointCart& ptp {seq.getCmd<PtpJointCart>(0)};
   const CircInterimCart& circ {seq.getCmd<CircInterimCart>(1)};
-  Eigen::Affine3d p1, p2;
+  Eigen::Isometry3d p1, p2;
   tf2::fromMsg(ptp.getGoalConfiguration().getPose(), p1);
   tf2::fromMsg(circ.getGoalConfiguration().getPose(), p2);
   auto distance = (p2.translation()-p1.translation()).norm();
@@ -509,8 +509,8 @@ TEST_F(IntegrationTestCommandListManager, TestExecutionTime)
   pilz_msgs::MotionSequenceRequest req {seq.toRequest()};
   // Create large request by making copies of the original sequence commands
   // and adding them to the end of the original sequence.
-  const size_t N {req.items.size()};
-  for(size_t i = 0; i<N; ++i)
+  const size_t n {req.items.size()};
+  for(size_t i = 0; i<n; ++i)
   {
     pilz_msgs::MotionSequenceItem item {req.items.at(i)};
     if (i == 0)
@@ -530,8 +530,8 @@ TEST_F(IntegrationTestCommandListManager, TestExecutionTime)
         res_single_vec.front()->getWayPointCount()-1);
   const double trajectory_time_n = res_n_vec.front()->getWayPointDurationFromStart(
         res_n_vec.front()->getWayPointCount()-1);
-  double multiplicator = req.items.size() / N;
-  EXPECT_LE(trajectory_time_n, trajectory_time_1*multiplicator);
+  double multiplicator = req.items.size() / n;
+  EXPECT_LE(trajectory_time_n, trajectory_time_1 * multiplicator);
   EXPECT_GE(trajectory_time_n, trajectory_time_1 * multiplicator * 0.5);
 }
 
@@ -547,7 +547,7 @@ TEST_F(IntegrationTestCommandListManager, TestExecutionTime)
 TEST_F(IntegrationTestCommandListManager, TestDifferentGroups)
 {
   Sequence seq {data_loader_->getSequence("ComplexSequenceWithGripper")};
-  ASSERT_GE(seq.size(), 1);
+  ASSERT_GE(seq.size(), 1u);
   // Count the number of group changes in the given sequence
   unsigned int num_groups {1};
   std::string last_group_name {seq.getCmd(0).getPlanningGroup()};
@@ -562,9 +562,10 @@ TEST_F(IntegrationTestCommandListManager, TestDifferentGroups)
 
   RobotTrajCont res_single_vec {manager_->solve(scene_, pipeline_, seq.toRequest())};
   EXPECT_EQ(res_single_vec.size(), num_groups);
-  for(RobotTrajCont::size_type i = 0; i<res_single_vec.size(); ++i)
+
+  for (const auto& res : res_single_vec)
   {
-    EXPECT_GT(res_single_vec.at(i)->getWayPointCount(), 0u);
+    EXPECT_GT(res->getWayPointCount(), 0u);
   }
 }
 
@@ -576,7 +577,7 @@ TEST_F(IntegrationTestCommandListManager, TestDifferentGroups)
 TEST_F(IntegrationTestCommandListManager, TestGripperCmdBlending)
 {
   Sequence seq {data_loader_->getSequence("PureGripperSequence")};
-  ASSERT_GE(seq.size(), 2);
+  ASSERT_GE(seq.size(), 2u);
   ASSERT_TRUE(seq.cmdIsOfType<Gripper>(0));
   ASSERT_TRUE(seq.cmdIsOfType<Gripper>(1));
 
@@ -604,7 +605,7 @@ TEST_F(IntegrationTestCommandListManager, TestGroupSpecificStartState)
   using std::placeholders::_1;
 
   Sequence seq {data_loader_->getSequence("ComplexSequenceWithGripper")};
-  ASSERT_GE(seq.size(), 4);
+  ASSERT_GE(seq.size(), 4u);
   seq.erase(4, seq.size());
 
   Gripper& gripper {seq.getCmd<Gripper>(0)};

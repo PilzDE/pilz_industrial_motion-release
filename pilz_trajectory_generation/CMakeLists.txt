@@ -32,16 +32,18 @@ find_package(Boost REQUIRED COMPONENTS )
 ################
 ## Clang tidy ##
 ################
-find_program(
-  CLANG_TIDY_EXE
-  NAMES "clang-tidy"
-  DOC "Path to clang-tidy executable"
-  )
-if(NOT CLANG_TIDY_EXE)
-  message(FATAL_ERROR "clang-tidy not found.")
-else()
-  message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-  set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+if(CATKIN_ENABLE_CLANG_TIDY)
+  find_program(
+    CLANG_TIDY_EXE
+    NAMES "clang-tidy"
+    DOC "Path to clang-tidy executable"
+    )
+  if(NOT CLANG_TIDY_EXE)
+    message(FATAL_ERROR "clang-tidy not found.")
+  else()
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+  endif()
 endif()
 
 ###################################
@@ -57,6 +59,7 @@ catkin_package(
 ###########
 ## Build ##
 ###########
+
 include_directories(
   include
 )
@@ -260,14 +263,14 @@ add_rostest_gmock(integrationtest_sequence_action_capability_with_gripper
 target_link_libraries(integrationtest_sequence_action_capability_with_gripper
    ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES} ${PROJECT_NAME}_test)
 
-add_rostest_gmock(integrationtest_sequence_action_capability_abb_irb2400
-  test/integrationtest_sequence_action_capability_abb_irb2400.test
-  test/integrationtest_sequence_action_capability.cpp
-)
-target_link_libraries(integrationtest_sequence_action_capability_abb_irb2400
-  ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES} ${PROJECT_NAME}_test)
+# Tests with other robots only for kinetic (for now)
 
-# Comment unstable panda test for now
+#add_rostest_gmock(integrationtest_sequence_action_capability_abb_irb2400
+#  test/integrationtest_sequence_action_capability_abb_irb2400.test
+#  test/integrationtest_sequence_action_capability.cpp
+#)
+#target_link_libraries(integrationtest_sequence_action_capability_abb_irb2400
+#  ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES} ${PROJECT_NAME}_test)
 
 #add_rostest_gmock(integrationtest_sequence_action_capability_frankaemika_panda
 #  test/integrationtest_sequence_action_capability_frankaemika_panda.test
@@ -283,11 +286,13 @@ add_rostest_gtest(integrationtest_sequence_service_capability
 target_link_libraries(integrationtest_sequence_service_capability
   ${catkin_LIBRARIES} ${PROJECT_NAME}_test)
 
+# Tests with other robots only for kinetic (for now)
+
 #add_rostest(test/integrationtest_sequence_service_capability_frankaemika_panda.test
 #  DEPENDENCIES integrationtest_sequence_service_capability )
 
-add_rostest(test/integrationtest_sequence_service_capability_abb_irb2400.test
-  DEPENDENCIES integrationtest_sequence_service_capability )
+#add_rostest(test/integrationtest_sequence_service_capability_abb_irb2400.test
+#  DEPENDENCIES integrationtest_sequence_service_capability )
 
 add_rostest_gtest(integrationtest_sequence_service_capability_with_gripper
   test/integrationtest_sequence_service_capability_with_gripper.test
@@ -307,8 +312,10 @@ target_link_libraries(integrationtest_command_planning
 add_rostest(test/integrationtest_command_planning_with_gripper.test
   DEPENDENCIES integrationtest_command_planning )
 
-add_rostest(test/integrationtest_command_planning_abb_irb2400.test
-  DEPENDENCIES integrationtest_command_planning )
+# Tests with other robots only for kinetic (for now)
+
+#add_rostest(test/integrationtest_command_planning_abb_irb2400.test
+#  DEPENDENCIES integrationtest_command_planning )
 
 #add_rostest(test/integrationtest_command_planning_frankaemika_panda.test
 #  DEPENDENCIES integrationtest_command_planning )

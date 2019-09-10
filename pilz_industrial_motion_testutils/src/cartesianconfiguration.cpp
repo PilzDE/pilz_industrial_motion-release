@@ -36,7 +36,7 @@ CartesianConfiguration::CartesianConfiguration(const std::string& group_name,
 CartesianConfiguration::CartesianConfiguration(const std::string& group_name,
                                                const std::string& link_name,
                                                const std::vector<double>& config,
-                                               moveit::core::RobotModelConstPtr robot_model)
+                                               const moveit::core::RobotModelConstPtr& robot_model)
   : RobotConfiguration(group_name, robot_model)
   , link_name_(link_name)
   , pose_(toPose(config))
@@ -91,7 +91,7 @@ moveit_msgs::RobotState CartesianConfiguration::toMoveitMsgsRobotState() const
   rstate.update();
 
   // set to Cartesian pose
-  Eigen::Affine3d start_pose;
+  Eigen::Isometry3d start_pose;
   tf::poseMsgToEigen(pose_, start_pose);
   if(!rstate.setFromIK(rstate.getRobotModel()->getJointModelGroup(group_name_), start_pose, link_name_))
   {

@@ -53,10 +53,10 @@ class ValueTypeContainer
 {
 public:
   typedef T Type_;
-  static const int Value_ = N;
+  static const int VALUE = N;
 };
 template<typename T, int N>
-const int ValueTypeContainer<T, N>::Value_;
+const int ValueTypeContainer<T, N>::VALUE;
 
 typedef ValueTypeContainer<pilz::PlanningContextPTP, 0> PTP_NO_GRIPPER;
 typedef ValueTypeContainer<pilz::PlanningContextPTP, 1> PTP_WITH_GRIPPER;
@@ -76,7 +76,7 @@ class PlanningContextTest : public ::testing::Test
 {
 protected:
 
-  virtual void SetUp()
+  void SetUp() override
   {
     ASSERT_FALSE(robot_model_ == nullptr) << "There is no robot model!";
 
@@ -99,17 +99,17 @@ protected:
 
     // Define and set the current scene
     planning_scene::PlanningScenePtr scene(new planning_scene::PlanningScene(robot_model_));
-    robot_state::RobotState currentState(robot_model_);
-    currentState.setToDefaultValues();
-    currentState.setJointGroupPositions(planning_group_, {0, 1.57, 1.57, 0, 0.2, 0});
-    scene->setCurrentState(currentState);
+    robot_state::RobotState current_state(robot_model_);
+    current_state.setToDefaultValues();
+    current_state.setJointGroupPositions(planning_group_, {0, 1.57, 1.57, 0, 0.2, 0});
+    scene->setCurrentState(current_state);
     planning_context_->setPlanningScene(scene); // TODO Check what happens if this is missing
   }
 
   /**
    * @brief Generate a valid fully defined request
    */
-  planning_interface::MotionPlanRequest getValidRequest(const std::string context_name) const
+  planning_interface::MotionPlanRequest getValidRequest(const std::string& context_name) const
   {
     planning_interface::MotionPlanRequest req;
 
@@ -124,14 +124,14 @@ protected:
     // state state in joint space, used as initial positions, since IK does not work at zero positions
     rstate.setJointGroupPositions(this->planning_group_, {4.430233957464225e-12, 0.007881892504574495, -1.8157263253868452,
                                  1.1801525390026025e-11, 1.8236082178909834, 8.591793942969161e-12});
-    Eigen::Affine3d start_pose(Eigen::Affine3d::Identity());
+    Eigen::Isometry3d start_pose(Eigen::Isometry3d::Identity());
     start_pose.translation() = Eigen::Vector3d(0.3, 0, 0.65);
     rstate.setFromIK(this->robot_model_->getJointModelGroup(this->planning_group_),
                      start_pose);
     moveit::core::robotStateToRobotStateMsg(rstate,req.start_state,false);
 
     // goal constraint
-    Eigen::Affine3d goal_pose(Eigen::Affine3d::Identity());
+    Eigen::Isometry3d goal_pose(Eigen::Isometry3d::Identity());
     goal_pose.translation() = Eigen::Vector3d(0, 0.3, 0.65);
     Eigen::Matrix3d goal_rotation;
     goal_rotation = Eigen::AngleAxisd(0*M_PI, Eigen::Vector3d::UnitZ());
@@ -159,7 +159,7 @@ protected:
   // ros stuff
   ros::NodeHandle ph_ {"~"};
   robot_model::RobotModelConstPtr robot_model_ {
-    robot_model_loader::RobotModelLoader(!T::Value_ ? PARAM_MODEL_NO_GRIPPER_NAME: PARAM_MODEL_WITH_GRIPPER_NAME).getModel()};
+    robot_model_loader::RobotModelLoader(!T::VALUE ? PARAM_MODEL_NO_GRIPPER_NAME: PARAM_MODEL_WITH_GRIPPER_NAME).getModel()};
 
   std::unique_ptr<planning_interface::PlanningContext> planning_context_;
 
