@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>pilz_trajectory_generation</name>
-  <version>0.4.6</version>
+  <version>0.4.7</version>
   <description>The pilz_trajectory_generation package containing the MoveIt! plugin pilz_command_planner.</description>
 
   <maintainer email="a.gutenkunst@pilz.de">Alexander Gutenkunst</maintainer>
@@ -16,8 +16,6 @@
   <url type="repository">https://github.com/PilzDE/pilz_industrial_motion</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-
-  <build_depend>clang-tidy</build_depend>
 
   <depend>orocos_kdl</depend>
   <depend>roscpp</depend>
