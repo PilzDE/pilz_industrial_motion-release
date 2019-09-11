@@ -2,6 +2,12 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.10 (2019-09-11)
+-------------------
+* Fix clang-tidy issues
+* integrate clang-tidy via CMake flag
+* Contributors: Pilz GmbH and Co. KG
+
 0.3.9 (2019-09-05)
 ------------------
 * Adapt to changes in pilz_robots
