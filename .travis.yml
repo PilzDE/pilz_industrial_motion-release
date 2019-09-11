@@ -20,7 +20,7 @@ env:
   global:
     - AFTER_SCRIPT='apt list --installed | grep "^ros-"'
     - CCACHE_DIR=$HOME/.ccache
-    - ROS_DISTRO="melodic"
+    - ROS_DISTRO="kinetic" 
     - CATKIN_LINT=true
     - CATKIN_LINT_ARGS='--strict'
     - ADDITIONAL_DEBS="clang-tidy libclang-dev"

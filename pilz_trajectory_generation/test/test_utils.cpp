@@ -48,7 +48,7 @@ pilz::JointLimitsContainer testutils::createFakeLimits(const std::vector<std::st
 bool testutils::getExpectedGoalPose(const moveit::core::RobotModelConstPtr &robot_model,
                                     const planning_interface::MotionPlanRequest &req,
                                     std::string &link_name,
-                                    Eigen::Isometry3d& goal_pose_expect )
+                                    Eigen::Affine3d& goal_pose_expect )
 {
   // ++++++++++++++++++++++++++++++++++
   // + Get goal from joint constraint +
@@ -129,7 +129,7 @@ bool testutils::isGoalReached(const moveit::core::RobotModelConstPtr &robot_mode
                               const double orientation_tolerance)
 {
   std::string link_name;
-  Eigen::Isometry3d goal_pose_expect;
+  Eigen::Affine3d goal_pose_expect;
   if ( !testutils::getExpectedGoalPose(robot_model, req, link_name, goal_pose_expect) )
   {
     return false;
@@ -137,7 +137,7 @@ bool testutils::isGoalReached(const moveit::core::RobotModelConstPtr &robot_mode
 
   // compute the actual goal pose in model frame
   trajectory_msgs::JointTrajectoryPoint last_point = trajectory.points.back();
-  Eigen::Isometry3d goal_pose_actual;
+  Eigen::Affine3d goal_pose_actual;
   std::map<std::string, double> joint_state;
   for(std::size_t i = 0; i < trajectory.joint_names.size(); ++i)
   {
@@ -197,7 +197,7 @@ bool testutils::checkCartesianLinearity(const moveit::core::RobotModelConstPtr &
                                         const double rot_angle_tolerance)
 {
   std::string link_name;
-  Eigen::Isometry3d goal_pose_expect;
+  Eigen::Affine3d goal_pose_expect;
   if ( !testutils::getExpectedGoalPose(robot_model, req, link_name, goal_pose_expect) )
   {
     return false;
@@ -206,7 +206,7 @@ bool testutils::checkCartesianLinearity(const moveit::core::RobotModelConstPtr &
   // compute start pose
   robot_state::RobotState rstate(robot_model);
   moveit::core::jointStateToRobotState(req.start_state.joint_state, rstate);
-  Eigen::Isometry3d start_pose = rstate.getFrameTransform(link_name);
+  Eigen::Affine3d start_pose = rstate.getFrameTransform(link_name);
 
   // start goal angle axis
   Eigen::AngleAxisd start_goal_aa(start_pose.rotation().transpose()*goal_pose_expect.rotation());
@@ -214,7 +214,7 @@ bool testutils::checkCartesianLinearity(const moveit::core::RobotModelConstPtr &
   // check the linearity
   for(trajectory_msgs::JointTrajectoryPoint way_point : trajectory.points)
   {
-    Eigen::Isometry3d way_point_pose;
+    Eigen::Affine3d way_point_pose;
     std::map<std::string, double> way_point_joint_state;
     for(std::size_t i=0; i<trajectory.joint_names.size(); ++i)
     {
@@ -261,9 +261,9 @@ bool testutils::checkCartesianLinearity(const moveit::core::RobotModelConstPtr &
 
 }
 
-bool testutils::checkSLERP(const Eigen::Isometry3d &start_pose,
-                           const Eigen::Isometry3d &goal_pose,
-                           const Eigen::Isometry3d &wp_pose,
+bool testutils::checkSLERP(const Eigen::Affine3d &start_pose,
+                           const Eigen::Affine3d &goal_pose,
+                           const Eigen::Affine3d &wp_pose,
                            const double rot_axis_norm_tolerance,
                            const double rot_angle_tolerance)
 {
@@ -292,7 +292,7 @@ bool testutils::checkSLERP(const Eigen::Isometry3d &start_pose,
 bool testutils::computeLinkFK(const moveit::core::RobotModelConstPtr &robot_model,
                               const std::string &link_name,
                               const std::map<std::string, double> &joint_state,
-                              Eigen::Isometry3d &pose)
+                              Eigen::Affine3d &pose)
 {
   // create robot state
   robot_state::RobotState rstate(robot_model);
@@ -526,7 +526,7 @@ bool testutils::toTCPPose(const moveit::core::RobotModelConstPtr &robot_model,
       ++joint_values_it;
     }
 
-    Eigen::Isometry3d eig_pose;
+    Eigen::Affine3d eig_pose;
     if ( !testutils::computeLinkFK(robot_model, link_name, joint_state, eig_pose) )
     {
       return false;
@@ -763,7 +763,7 @@ bool testutils::checkBlendingCartSpaceContinuity(const pilz::TrajectoryBlendRequ
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   // connection points
-  Eigen::Isometry3d pose_first_end, pose_first_end_1, pose_blend_start, pose_blend_start_1,
+  Eigen::Affine3d pose_first_end, pose_first_end_1, pose_blend_start, pose_blend_start_1,
       pose_blend_end, pose_blend_end_1, pose_second_start, pose_second_start_1;
   // one sample before last point of first trajectory
   pose_first_end_1 = res.first_trajectory->getWayPointPtr(res.first_trajectory->getWayPointCount()-2)->getFrameTransform(req.link_name);
@@ -881,13 +881,13 @@ bool testutils::checkBlendingCartSpaceContinuity(const pilz::TrajectoryBlendRequ
 
 bool testutils::checkThatPointsInRadius(const std::string& link_name,
                                         const double& r,
-                                        Eigen::Isometry3d& circ_pose,
+                                        Eigen::Affine3d& circ_pose,
                                         const pilz::TrajectoryBlendResponse& res)
 {
   bool result = true;
   for (size_t i = 1; i < res.blend_trajectory->getWayPointCount()-1; ++i)
   {
-    Eigen::Isometry3d curr_pos(res.blend_trajectory->getWayPointPtr(i)->getFrameTransform(link_name));
+    Eigen::Affine3d curr_pos(res.blend_trajectory->getWayPointPtr(i)->getFrameTransform(link_name));
     if ( (curr_pos.translation() - circ_pose.translation()).norm() > r )
     {
       std::cout << "Point " << i << " does not lie within blending radius (dist: "
@@ -900,8 +900,8 @@ bool testutils::checkThatPointsInRadius(const std::string& link_name,
   return result;
 }
 
-void testutils::computeCartVelocity(const Eigen::Isometry3d& pose_1,
-                                    const Eigen::Isometry3d& pose_2,
+void testutils::computeCartVelocity(const Eigen::Affine3d& pose_1,
+                                    const Eigen::Affine3d& pose_2,
                                     double duration,
                                     Eigen::Vector3d &v,
                                     Eigen::Vector3d &w)
@@ -963,7 +963,7 @@ void testutils::createFakeCartTraj(const robot_trajectory::RobotTrajectoryPtr &t
   {
     trajectory_msgs::JointTrajectoryPoint waypoint;
     waypoint.time_from_start = ros::Duration(traj->getWayPointDurationFromStart(i));
-    Eigen::Isometry3d waypoint_pose = traj->getWayPointPtr(i)->getFrameTransform(link_name);
+    Eigen::Affine3d waypoint_pose = traj->getWayPointPtr(i)->getFrameTransform(link_name);
     Eigen::Vector3d waypoint_position = waypoint_pose.translation();
     waypoint.positions.push_back(waypoint_position(0));
     waypoint.positions.push_back(waypoint_position(1));
@@ -1100,7 +1100,7 @@ bool testutils::checkBlendResult(const pilz::TrajectoryBlendRequest& blend_req,
     return false;
   };
 
-  Eigen::Isometry3d circ_pose = blend_req.first_trajectory->getLastWayPointPtr()->getFrameTransform(blend_req.link_name);
+  Eigen::Affine3d circ_pose = blend_req.first_trajectory->getLastWayPointPtr()->getFrameTransform(blend_req.link_name);
   if(!testutils::checkThatPointsInRadius(blend_req.link_name, blend_req.blend_radius, circ_pose, blend_res))
   {
     return false;
