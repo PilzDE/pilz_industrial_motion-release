@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>pilz_industrial_motion_testutils</name>
-  <version>0.3.9</version>
+  <version>0.3.10</version>
   <description>Helper scripts and functionality to test industrial motion generation</description>
 
   <maintainer email="a.gutenkunst@pilz.de">Alexander Gutenkunst</maintainer>
@@ -16,7 +16,6 @@
   <url type="repository">https://github.com/PilzDE/pilz_industrial_motion</url>
 
   <build_depend>eigen_conversions</build_depend>
-￼	 <build_depend>clang-tidy</build_depend>
   <build_depend>moveit_core</build_depend>
   <build_depend>moveit_msgs</build_depend>
   <build_depend>pilz_msgs</build_depend>
