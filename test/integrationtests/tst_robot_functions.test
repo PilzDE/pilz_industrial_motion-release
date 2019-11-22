@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <launch>
 
   <arg name="debug" default="false"/>
-  <arg name="gripper" default="pg70"/>
   <arg name="coverage" default="false"/>
   <arg name="pythontest_launch_prefix" value="$(eval 'python-coverage run -p' if arg('coverage') else '')"/>
 
@@ -35,15 +34,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <arg name="fake_execution" value="true"/>
     <arg name="info" value="true"/>
     <arg name="debug" value="$(arg debug)"/>
-    <arg name="gripper" value="$(arg gripper)"/>
     <arg name="pipeline" value="pilz_command_planner" />
   </include>
 
   <node name="fake_speed_override_node" pkg="prbt_hardware_support" type="fake_speed_override_node"/>
 
   <!-- test node -->
-  <test test-name="api_gripper" pkg="pilz_robot_programming"
-    type="tst_api_gripper.py" time-limit="300"
+  <test test-name="tst_robot_functions" pkg="pilz_robot_programming"
+    type="tst_robot_functions.py" time-limit="300"
     launch-prefix="$(arg pythontest_launch_prefix)"/>
 
 </launch>
