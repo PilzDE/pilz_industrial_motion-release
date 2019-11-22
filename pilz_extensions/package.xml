@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>pilz_extensions</name>
-  <version>0.3.10</version>
+  <version>0.4.8</version>
   <description>
   The pilz_extensions package. Here are classes extending the functionality of other packages.
   On the long run these extensions should become pull requests on the respective packages.
@@ -18,14 +18,12 @@
   <url type="bugtracker">https://github.com/PilzDE/pilz_industrial_motion/issues</url>
   <url type="repository">https://github.com/PilzDE/pilz_industrial_motion</url>
 
+  <buildtool_depend>catkin</buildtool_depend>
+
   <build_depend>roscpp</build_depend>
 
   <depend>joint_limits_interface</depend>
 
-￼	 <test_depend>rostest</test_depend>
-  <test_depend>rosunit</test_depend>
+  <test_depend>rostest</test_depend>
   <test_depend>code_coverage</test_depend>
-  <test_depend>prbt_support</test_depend>
-
-  <buildtool_depend>catkin</buildtool_depend>
 </package>
