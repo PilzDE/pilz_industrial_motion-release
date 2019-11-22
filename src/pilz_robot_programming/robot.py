@@ -23,14 +23,15 @@ import threading
 from actionlib import SimpleActionClient, GoalStatus
 from geometry_msgs.msg import Quaternion, PoseStamped, Pose
 from moveit_commander import RobotCommander, MoveItCommanderException
-from moveit_msgs.msg import MoveItErrorCodes, MoveGroupAction
+from moveit_msgs.msg import MoveItErrorCodes
 import rospy
 from std_msgs.msg import Header
 from std_srvs.srv import Trigger
 import tf
 
 from pilz_msgs.msg import MoveGroupSequenceAction
-from prbt_hardware_support.srv import IsBrakeTestRequired, IsBrakeTestRequiredResponse, BrakeTest, BrakeTestResponse
+from prbt_hardware_support.srv import IsBrakeTestRequired, IsBrakeTestRequiredResponse, BrakeTest, BrakeTestResponse, \
+                                      GetSpeedOverride
 from .move_control_request import _MoveControlState, MoveControlAction, _MoveControlStateMachine
 from .commands import _AbstractCmd, _DEFAULT_PLANNING_GROUP, _DEFAULT_TARGET_LINK, _DEFAULT_BASE_LINK, Sequence
 from .exceptions import *
@@ -101,6 +102,7 @@ class Robot(object):
     _STOP_TOPIC_NAME = "stop_movement"
     _SEQUENCE_TOPIC = "sequence_move_group"
     _BRAKE_TEST_EXECUTE_SRV = "/prbt/execute_braketest"
+    _GET_SPEED_OVERRIDE_SRV = "/prbt/get_speed_override"
     _BRAKE_TEST_REQUIRED_SRV = "/prbt/brake_test_required"
     _INSTANCE_PARAM = "/robot_api_instance"
 
@@ -153,6 +155,17 @@ class Robot(object):
     @_robot_commander.setter
     def _robot_commander(self, robot_commander):
         self.__robot_commander = robot_commander
+
+    @property
+    def _speed_override(self):
+        """ Returns the currently active speed override
+
+        Both velocity and acceleration scaling of a command are factorized during :py:meth:`move`.
+        The command itself remains untouched.
+        """
+        res = self._get_speed_override_srv()
+
+        return res.speed_override
 
     def get_current_joint_states(self, planning_group=_DEFAULT_PLANNING_GROUP):
         """Returns the current joint state values of the robot.
@@ -505,6 +518,12 @@ class Robot(object):
             Robot._RESUME_TOPIC_NAME, Trigger, self._resume_service_callback)
         self._stop_service = rospy.Service(
             Robot._STOP_TOPIC_NAME, Trigger, self._stop_service_callback)
+
+        # Connect to speed override service
+        rospy.loginfo("Waiting for connection to service " + self._GET_SPEED_OVERRIDE_SRV + "...")
+        rospy.wait_for_service(self._GET_SPEED_OVERRIDE_SRV, self._SERVICE_WAIT_TIMEOUT_S)
+        rospy.loginfo("Connection to service " + self._GET_SPEED_OVERRIDE_SRV + " estabilshed")
+        self._get_speed_override_srv = rospy.ServiceProxy(self._GET_SPEED_OVERRIDE_SRV, GetSpeedOverride)
 
     def _release(self):
         rospy.logdebug("Release called")
