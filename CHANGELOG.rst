@@ -2,6 +2,11 @@
 Changelog for package pilz_extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.8 (2019-11-22)
+------------------
+* Remove demo node
+* Contributors: Pilz GmbH and Co. KG
+
 0.4.7 (2019-09-10)
 ------------------
 * Fix clang-tidy issues
