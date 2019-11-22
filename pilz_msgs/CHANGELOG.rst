@@ -2,6 +2,12 @@
 Changelog for package pilz_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.8 (2019-11-22)
+------------------
+* Add srv definition for speed override
+* Add srv definitions for the brake-test support
+* Contributors: Pilz GmbH and Co. KG
+
 0.4.7 (2019-09-10)
 ------------------
 
