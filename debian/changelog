@@ -1,0 +1,119 @@
+ros-melodic-pilz-msgs (0.4.10-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Tue, 03 Dec 2019 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.9-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Wed, 27 Nov 2019 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.8-1bionic) bionic; urgency=high
+
+  * Add srv definition for speed override
+  * Add srv definitions for the brake-test support
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Thu, 21 Nov 2019 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.7-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Mon, 09 Sep 2019 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.6-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Tue, 03 Sep 2019 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.5-1bionic) bionic; urgency=high
+
+  * Remove non-ascii symbol from msg/srv/action causing trouble with genpy/python rosbag api
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Mon, 02 Sep 2019 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.4-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Tue, 18 Jun 2019 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.3-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Sun, 07 Apr 2019 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.2-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Tue, 12 Mar 2019 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.1-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Tue, 26 Feb 2019 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.4.0-1bionic) bionic; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Mon, 17 Dec 2018 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.3.6-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Mon, 25 Feb 2019 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.3.5-1bionic) bionic; urgency=high
+
+
+
+ -- Alexander Gutenkunst <a.gutenkunst@pilz.de>  Tue, 05 Feb 2019 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.3.1-1bionic) bionic; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Sun, 16 Dec 2018 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.3.0-1bionic) bionic; urgency=high
+
+  * Renaming blend -> sequence
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Tue, 27 Nov 2018 23:00:00 -0000
+
+ros-melodic-pilz-msgs (0.2.2-1bionic) bionic; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Tue, 25 Sep 2018 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.2.1-1bionic) bionic; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Mon, 24 Sep 2018 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.1.1-1bionic) bionic; urgency=high
+
+
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Mon, 24 Sep 2018 22:00:00 -0000
+
+ros-melodic-pilz-msgs (0.1.0-1bionic) bionic; urgency=high
+
+  * Added msg definition for blend request and response
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Pilz GmbH and Co. KG <ros@pilz.de>  Thu, 13 Sep 2018 22:00:00 -0000
+
+
