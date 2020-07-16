@@ -18,7 +18,8 @@
 from __future__ import absolute_import
 
 import rospy
-from tf import transformations
+import tf2_geometry_msgs  # for buffer.transform() to eat a geometry_msgs.Pose directly
+from tf_conversions import transformations
 from geometry_msgs.msg import Quaternion, Pose
 from geometry_msgs.msg import PoseStamped
 from pilz_msgs.msg import MoveGroupSequenceGoal, MotionSequenceItem
@@ -48,7 +49,6 @@ _DEFAULT_ORIENTATION_TOLERANCE = 1e-5
 # axis sequence of euler angles
 _AXIS_SEQUENCE = "rzyz"
 
-
 _DEFAULT_PLANNING_GROUP = "manipulator"
 _DEFAULT_TARGET_LINK = "prbt_tcp"
 _DEFAULT_GRIPPER_PLANNING_GROUP = "gripper"
@@ -57,6 +57,7 @@ _DEFAULT_BASE_LINK = "prbt_base"
 
 class _AbstractCmd(object):
     """Base class for all commands."""
+
     def __init__(self, *args, **kwargs):
         super(_AbstractCmd, self).__init__(*args, **kwargs)
         # set robot state as empty diff in planning scene to start with current planning scene
@@ -127,11 +128,13 @@ class _AbstractCmd(object):
     __repr__ = __str__
 
 
-class _BaseCmd(_AbstractCmd):
+class BaseCmd(_AbstractCmd):
     """Base class for all single commands.
 
-    :param goal: The goal of the motion, which can be given in joint (list of float, in the order of active joints in
-        the planning group) or Cartesian space (geometry_msgs/Pose).
+    :param goal: The goal of the motion, which can be given in joint (list or tuple of float, in the order of active
+        joints in the planning group) or Cartesian space. For geometry_msgs/Pose you can specify the reference frame
+        as extra parameter `reference_frame` (see below). If a PoseStamped is passed as goal, timestamp has to be zero
+        and the `frame_id` from the Header is used instead of `reference_frame`
 
     :note:
         The geometry_msgs/Pose consists of position and orientation (quaternion). When creating an instance of
@@ -173,15 +176,22 @@ class _BaseCmd(_AbstractCmd):
     :type relative: bool
     :type reference_frame: string
     """
+
     def __init__(self, goal=None, planning_group=_DEFAULT_PLANNING_GROUP, target_link=_DEFAULT_TARGET_LINK,
                  vel_scale=_DEFAULT_CARTESIAN_VEL_SCALE, acc_scale=_DEFAULT_ACC_SCALE, relative=False,
                  reference_frame=_DEFAULT_BASE_LINK, *args, **kwargs):
-        super(_BaseCmd, self).__init__(*args, **kwargs)
+        super(BaseCmd, self).__init__(*args, **kwargs)
 
         # Needs to be set by derived classes
         self._planner_id = None
 
-        self._goal = goal
+        try:
+            if isinstance(goal, str):
+                raise TypeError()
+            self._goal = tuple(goal)
+        except TypeError:
+            self._goal = goal
+
         self._planning_group = planning_group
         self._target_link = target_link
         self._vel_scale = vel_scale
@@ -197,11 +207,31 @@ class _BaseCmd(_AbstractCmd):
         out_str += " reference: " + str(self._reference_frame)
         return out_str
 
+    def __eq__(self, other):
+        if isinstance(other, BaseCmd):
+            return hash(self) == hash(other)
+        return NotImplemented
+
+    def __ne__(self, other):
+        x = self.__eq__(other)
+        if x is not NotImplemented:
+            return not x
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(tuple(sorted([str(t) for t in self.__dict__.items()])))
+
     __repr__ = __str__
 
     def _cmd_to_request(self, robot):
         """Transforms the given command to a MotionPlanRequest."""
         req = MotionPlanRequest()
+
+        self._robot_reference_frame = robot.get_planning_frame()
+        self._active_joints = robot.get_active_joints(self._planning_group)
+        self._start_joint_states = robot.get_current_joint_states(planning_group=self._planning_group)
+        self._start_pose = robot.get_current_pose(target_link=self._target_link, base=self._reference_frame)
+        self._tf_buffer = robot.tf_buffer_
 
         # Set general info
         req.planner_id = self._planner_id
@@ -217,39 +247,55 @@ class _BaseCmd(_AbstractCmd):
         if self._goal is None:
             raise NameError("Goal is not given.")
 
-        goal_constraints = Constraints()
+        convertion_methods = [self._pose_to_constraint,
+                              self._pose_stamped_to_constraint,
+                              self._joint_values_to_constraint]
+        error_list = []
 
-        # goal as Pose in Cartesian space
-        if isinstance(self._goal, Pose):
-            goal_pose = self._get_goal_pose(robot)
-
-            robot_reference_frame = robot._robot_commander.get_planning_frame()
-            goal_constraints.orientation_constraints.append(
-                _to_ori_constraint(goal_pose, robot_reference_frame, self._target_link))
-            goal_constraints.position_constraints.append(
-                _to_pose_constraint(goal_pose, robot_reference_frame, self._target_link))
-
-        # goal as list of int or float in joint space
-        elif isinstance(self._goal, list):
-            joint_names = robot._robot_commander.get_group(self._planning_group).get_active_joints()
-            joint_values = self._get_joint_pose(robot)
-
-            if len(joint_names) != len(joint_values):
-                raise IndexError("Given joint goal does not match the planning group " + req.group_name + ".")
-
-            for joint_name, joint_value in zip(joint_names, joint_values):
-                joint_constraint = JointConstraint()
-                joint_constraint.joint_name = joint_name
-                joint_constraint.position = joint_value
-                joint_constraint.weight = 1
-                goal_constraints.joint_constraints.append(joint_constraint)
-
+        for method in convertion_methods:
+            try:
+                req.goal_constraints = method()
+                break
+            except (TypeError, AttributeError) as e:
+                error_list.append(e)
+                pass
         else:
-            raise NotImplementedError("Unknown type of goal is given.")
-
-        req.goal_constraints.append(goal_constraints)
+            raise NotImplementedError("Unknown type of goal: %s \nerrors: %s" % (str(self._goal), str(error_list)))
 
         return req
+
+    def _check_header_time(self):
+        if self._goal.header.stamp != rospy.Time(0, 0):
+            raise ValueError("Given goal has unsupported time for future execution.")
+
+    def _joint_values_to_constraint(self, joint_names=()):
+        if isinstance(self._goal, str):
+            raise TypeError("String is not convertible into joint values.")
+        joint_names = joint_names if len(joint_names) != 0 else self._active_joints
+        joint_values = self._get_joint_pose()
+        if len(joint_names) != len(joint_values):
+            raise IndexError("Given joint goal does not match the active joints " + str(joint_names) + ".")
+
+        goal_constraints = Constraints()
+        goal_constraints.joint_constraints = [JointConstraint(joint_name=name, position=value, weight=1)
+                                              for name, value in zip(joint_names, joint_values)]
+        return [goal_constraints]
+
+    def _pose_to_constraint(self):
+        goal_pose = self._get_goal_pose()
+        goal_constraints = Constraints()
+        robot_reference_frame = self._robot_reference_frame
+        goal_constraints.orientation_constraints.append(
+            _to_ori_constraint(goal_pose, robot_reference_frame, self._target_link))
+        goal_constraints.position_constraints.append(
+            _to_pose_constraint(goal_pose, robot_reference_frame, self._target_link))
+        return [goal_constraints]
+
+    def _pose_stamped_to_constraint(self):
+        self._reference_frame = self._goal.header.frame_id if self._goal.header.frame_id != "" else _DEFAULT_BASE_LINK
+        self._check_header_time()
+        self._goal = self._goal.pose
+        return self._pose_to_constraint()
 
     def _get_sequence_request(self, robot):
         """Constructs a sequence request from the command.
@@ -268,34 +314,47 @@ class _BaseCmd(_AbstractCmd):
 
         return sequence_action_goal
 
-    def _get_goal_pose(self, robot):
+    def _get_goal_pose(self):
         """Determines the goal pose for the given command."""
-        current_pose = robot.get_current_pose(target_link=self._target_link, base=self._reference_frame)
-
         if self._relative:
-            self._goal = _pose_relative_to_absolute(current_pose, self._goal)
+            self._goal = _pose_relative_to_absolute(self._start_pose, self._goal)
 
         if not self._reference_frame == _DEFAULT_BASE_LINK:
-            return _to_robot_reference(robot, self._reference_frame, self._goal)
+            return self._to_robot_reference(self._reference_frame, self._goal)
 
         # in case of uninitialized orientation, set the goal orientation as current
         if _is_quaternion_initialized(self._goal.orientation):
             return self._goal
         else:
-            return Pose(position=self._goal.position, orientation=current_pose.orientation)
+            return Pose(position=self._goal.position, orientation=self._start_pose.orientation)
 
-    def _get_joint_pose(self, robot):
+    def _get_joint_pose(self):
         """Determines the joint goal for the given command."""
-        assert isinstance(self._goal, list)
-        goal_joint_state = self._goal
-
-        if self._relative:
-            goal_joint_state = map(add, goal_joint_state,
-                                   robot.get_current_joint_states(planning_group=self._planning_group))
+        goal_joint_state = self._goal if not self._relative else \
+            map(add, self._goal, self._start_joint_states)
         return goal_joint_state
 
+    def _to_robot_reference(self, pose_frame, goal_pose_custom_ref):
+        """ Transforms a pose from a custom reference frame to one in robot reference frame.
 
-class Ptp(_BaseCmd):
+        :param pose_frame: is the custom reference frame of the pose.
+
+        :param goal_pose_custom_ref: pose in the custom reference frame.
+
+        :return: A goal pose in robot reference frame.
+        """
+        if not _is_quaternion_initialized(goal_pose_custom_ref.orientation):
+            goal_pose_custom_ref.orientation = Quaternion(w=1)
+        if pose_frame == self._robot_reference_frame:
+            return goal_pose_custom_ref
+
+        stamped = PoseStamped()
+        stamped.header.frame_id = pose_frame
+        stamped.pose = goal_pose_custom_ref
+        return self._tf_buffer.transform(stamped, self._robot_reference_frame).pose
+
+
+class Ptp(BaseCmd):
     """Represents a single point-to-point (Ptp) command.
     A :py:class:`Ptp` command allows the user to quickly move the robot from its current position to a specified point
     in space (goal). The trajectory taken to reach the goal is defined by the underlying planning
@@ -319,18 +378,19 @@ class Ptp(_BaseCmd):
 
             acc_scale = vel_scale * vel_scale
     """
+
     def __init__(self, vel_scale=_DEFAULT_JOINT_VEL_SCALE, acc_scale=None, *args, **kwargs):
         acc_scale_final = acc_scale if acc_scale is not None else Ptp._calc_acc_scale(vel_scale)
         super(Ptp, self).__init__(vel_scale=vel_scale, acc_scale=acc_scale_final, *args, **kwargs)
         self._planner_id = "PTP"
 
     def __str__(self):
-        out_str = _BaseCmd.__str__(self)
+        out_str = BaseCmd.__str__(self)
         if self._relative:
             out_str += " relative: True"
-        if isinstance(self._goal, Pose):
+        if isinstance(self._goal, Pose) or isinstance(self._goal, PoseStamped):
             out_str += " Cartesian goal:\n" + str(self._goal)
-        if isinstance(self._goal, list):
+        elif isinstance(self._goal, tuple):
             out_str += " joint goal: " + str(self._goal)
         return out_str
 
@@ -338,10 +398,10 @@ class Ptp(_BaseCmd):
 
     @staticmethod
     def _calc_acc_scale(vel_scale):
-        return vel_scale*vel_scale
+        return vel_scale * vel_scale
 
 
-class Lin(_BaseCmd):
+class Lin(BaseCmd):
     """Represents a linear command.
     A :py:class:`Lin` command allows the user to move the robot from its current position to a specified point
     in space (goal). The trajectory taken to reach the goal is a straight line (in Cartesian space).
@@ -364,6 +424,7 @@ class Lin(_BaseCmd):
 
             acc_scale = vel_scale
     """
+
     def __init__(self, vel_scale=_DEFAULT_CARTESIAN_VEL_SCALE, acc_scale=None, *args, **kwargs):
 
         acc_scale_final = acc_scale if acc_scale is not None else Lin._calc_acc_scale(vel_scale)
@@ -373,12 +434,12 @@ class Lin(_BaseCmd):
         self._planner_id = "LIN"
 
     def __str__(self):
-        out_str = _BaseCmd.__str__(self)
+        out_str = BaseCmd.__str__(self)
         if self._relative:
             out_str += " relative: True"
-        if isinstance(self._goal, Pose):
+        if isinstance(self._goal, Pose) or isinstance(self._goal, PoseStamped):
             out_str += " Cartesian goal:\n" + str(self._goal)
-        if isinstance(self._goal, list):
+        elif isinstance(self._goal, tuple):
             out_str += " joint goal: " + str(self._goal)
         return out_str
 
@@ -389,7 +450,7 @@ class Lin(_BaseCmd):
         return vel_scale
 
 
-class Circ(_BaseCmd):
+class Circ(BaseCmd):
     """Represents a circular command. A :py:class:`Circ` command allows the user to move the robot from its
     current position to a specified point in space (goal).
     The trajectory taken to reach the goal represents a circle (in Cartesian space). The circle is defined by the
@@ -425,6 +486,7 @@ class Circ(_BaseCmd):
 
             acc_scale = vel_scale
     """
+
     def __init__(self, interim=None, center=None, vel_scale=_DEFAULT_CARTESIAN_VEL_SCALE, acc_scale=None,
                  *args, **kwargs):
 
@@ -437,7 +499,7 @@ class Circ(_BaseCmd):
         self._center = center
 
     def __str__(self):
-        out_str = _BaseCmd.__str__(self)
+        out_str = BaseCmd.__str__(self)
         if isinstance(self._goal, Pose) and self._goal is not None:
             out_str += " goal:\n" + str(self._goal)
         if self._interim is not None:
@@ -449,7 +511,7 @@ class Circ(_BaseCmd):
     __repr__ = __str__
 
     def _cmd_to_request(self, robot):
-        req = _BaseCmd._cmd_to_request(self, robot)
+        req = BaseCmd._cmd_to_request(self, robot)
 
         if self._center is not None and self._interim is not None:
             raise NameError("Both center and interim are set for circ command!")
@@ -467,11 +529,10 @@ class Circ(_BaseCmd):
             path_point.position = self._interim
 
         if self._reference_frame:
-            path_point = _to_robot_reference(robot, self._reference_frame, path_point)
+            path_point = self._to_robot_reference(self._reference_frame, path_point)
 
-        reference_frame = robot._robot_commander.get_planning_frame()
-
-        position_constraint = _to_pose_constraint(path_point, reference_frame, self._target_link, float('+inf'))
+        position_constraint = _to_pose_constraint(path_point, self._robot_reference_frame, self._target_link,
+                                                  float('+inf'))
 
         req.path_constraints.position_constraints = [position_constraint]
 
@@ -516,6 +577,7 @@ class Sequence(_AbstractCmd):
      :note: In case the planning of a command in a sequence fails, non of the commands in the sequence are executed.
 
     """
+
     def __init__(self, *args, **kwargs):
         super(Sequence, self).__init__(*args, **kwargs)
         # List of tuples containing commands and blend radii
@@ -530,7 +592,7 @@ class Sequence(_AbstractCmd):
             execute consecutively.
             The blend radius preceding a gripper command is always ignored. The blend radius stated with a gripper
             command is also ignored.
-        :type cmd: :py:class:`pilz_robot_programming.commands._BaseCmd`
+        :type cmd: :py:class:`pilz_robot_programming.commands.BaseCmd`
 
         :param blend_radius: The blending radius states how much the robot trajectory can deviate from the
             original trajectory (trajectory without blending) to blend the robot motion from one trajectory to the next.
@@ -549,7 +611,6 @@ class Sequence(_AbstractCmd):
         sequence_action_goal = MoveGroupSequenceGoal()
 
         for item in self.items:
-
             # Create and fill request
             curr_sequence_req = MotionSequenceItem()
             curr_sequence_req.blend_radius = item.blend_radius
@@ -573,7 +634,7 @@ class Sequence(_AbstractCmd):
     __repr__ = __str__
 
 
-class Gripper(_BaseCmd):
+class Gripper(BaseCmd):
     """Represents a gripper command to open and close the gripper.
     A :py:class:`gripper` command allows the user to move the gripper finger to desired opening width.
 
@@ -586,6 +647,7 @@ class Gripper(_BaseCmd):
 
             allowed axis velocity = vel_scale * maximal axis velocity
     """
+
     def __init__(self, goal, vel_scale=_DEFAULT_CARTESIAN_VEL_SCALE, *args, **kwargs):
         super(Gripper, self).__init__(goal=goal, planning_group=_DEFAULT_GRIPPER_PLANNING_GROUP,
                                       vel_scale=vel_scale, relative=False, *args, **kwargs)
@@ -635,31 +697,6 @@ class Gripper(_BaseCmd):
         return req
 
 
-def _to_robot_reference(robot, pose_frame, goal_pose_custom_ref):
-    """ Transforms a pose from a custom reference frame to one in robot reference frame.
-
-    :param pose_frame: is the custom reference frame of the pose.
-
-    :param goal_pose_custom_ref: pose in the custom reference frame.
-
-    :return: A goal pose in robot reference frame.
-    """
-    assert isinstance(goal_pose_custom_ref, Pose)
-
-    robot_ref = robot._robot_commander.get_planning_frame()
-
-    if not _is_quaternion_initialized(goal_pose_custom_ref.orientation):
-        goal_pose_custom_ref.orientation.w = 1
-
-    if pose_frame == robot_ref:
-        return goal_pose_custom_ref
-
-    stamped = PoseStamped()
-    stamped.header.frame_id = pose_frame
-    stamped.pose = goal_pose_custom_ref
-    return robot.tf_listener_.transformPose(robot_ref, stamped).pose
-
-
 def _to_ori_constraint(pose, reference_frame, link_name, orientation_tolerance=_DEFAULT_ORIENTATION_TOLERANCE):
     """Returns an orientation constraint suitable for ActionGoal's."""
     ori_con = OrientationConstraint()
@@ -692,17 +729,11 @@ def _to_pose_constraint(pose, reference_frame, link_name, position_tolerance=_DE
 
 def _is_quaternion_initialized(quaternion):
     """Check if the quaternion is initialized"""
-    if quaternion.x == 0. and quaternion.y == 0. and quaternion.z == 0. and quaternion.w == 0.:
-        return False
-    else:
-        return True
+    return quaternion != Quaternion()  # check, if all fields are zero
 
 
 def _pose_relative_to_absolute(current_pose, relative_pose):
     """Add the offset relative_pose to current_pose and return an absolute goal pose"""
-    assert isinstance(current_pose, Pose)
-    assert isinstance(relative_pose, Pose)
-
     goal_pose = deepcopy(current_pose)
 
     # translation
@@ -757,8 +788,4 @@ def from_euler(a, b, c):
         (pi/2., pi/2., 0) horizontal west
 
     """
-    quat = Quaternion()
-
-    [quat.x, quat.y, quat.z, quat.w] = transformations.quaternion_from_euler(a, b, c, axes=_AXIS_SEQUENCE)
-
-    return quat
+    return Quaternion(*transformations.quaternion_from_euler(a, b, c, axes=_AXIS_SEQUENCE))
