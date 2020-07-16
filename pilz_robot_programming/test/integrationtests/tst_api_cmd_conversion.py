@@ -17,9 +17,8 @@
 import unittest
 from rospkg import RosPack
 import numpy as np
-import tf
-import tf_conversions.posemath as pm
-from geometry_msgs.msg import Point
+import tf2_ros
+from geometry_msgs.msg import Point, PoseStamped, Transform, TransformStamped
 from tst_api_utils import setOverrideParam
 
 
@@ -140,12 +139,13 @@ class TestAPICmdConversion(unittest.TestCase):
         self.robot = Robot(API_VERSION)
         rospy.loginfo("Loading Robot done")
         self.test_data = XmlTestdataLoader(_TEST_DATA_FILE_NAME)
-        self.tf = tf.TransformBroadcaster()
-        self.tf_listener = tf.TransformListener()
+        self.tf_broadcaster_ = tf2_ros.TransformBroadcaster()
+        self.tf_buffer_ = tf2_ros.Buffer()
+        self.tf_listener_ = tf2_ros.TransformListener(self.tf_buffer_)
 
     def tearDown(self):
-        if hasattr(self, 'tf_listener'):
-            self.tf_listener.clear()
+        if hasattr(self, 'tf_buffer_'):
+            self.tf_buffer_.clear()
         if hasattr(self, 'robot'):
             self.robot._release()
             self.robot = None
@@ -164,6 +164,24 @@ class TestAPICmdConversion(unittest.TestCase):
         exp_goal_pose = self.test_data.get_pose("PTPPose", PLANNING_GROUP_NAME)
 
         ptp = Ptp(goal=exp_goal_pose, vel_scale=EXP_VEL_SCALE, acc_scale=EXP_ACC_SCALE)
+        req = ptp._cmd_to_request(self.robot)
+        self.assertIsNotNone(req)
+        self._analyze_request_general(PLANNING_GROUP_NAME, "PTP", EXP_VEL_SCALE, EXP_ACC_SCALE, req)
+        self._analyze_request_pose(TARGET_LINK_NAME, exp_goal_pose, req)
+
+    def test_ptp_cmd_convert_stamped_pose(self):
+        """ Check that conversion to MotionPlanRequest works correctly.
+            PoseStamp with a timestamp != Time() will be rejected, since future execution is not supported!
+
+            Test sequence:
+                1. Call ptp convert function with cartesian goal stamped pose.
+
+            Test Results:
+                1. Correct MotionPlanRequest is returned.
+        """
+        exp_goal_pose = self.test_data.get_pose("PTPPose", PLANNING_GROUP_NAME)
+        exp_goal_pose_stamped = PoseStamped(pose=exp_goal_pose)
+        ptp = Ptp(goal=exp_goal_pose_stamped, vel_scale=EXP_VEL_SCALE, acc_scale=EXP_ACC_SCALE)
         req = ptp._cmd_to_request(self.robot)
         self.assertIsNotNone(req)
         self._analyze_request_general(PLANNING_GROUP_NAME, "PTP", EXP_VEL_SCALE, EXP_ACC_SCALE, req)
@@ -214,6 +232,25 @@ class TestAPICmdConversion(unittest.TestCase):
         exp_joint_names = self.robot._robot_commander.get_group(req.group_name).get_active_joints()
         self._analyze_request_joint(exp_joint_names, exp_joint_values, req)
 
+    def test_ptp_cmd_convert_joint_tuple(self):
+        """ Check that conversion to MotionPlanRequest works correctly.
+
+            Test sequence:
+                1. Call ptp convert function with joint goal.
+
+            Test Results:
+                1. Correct MotionPlanRequest is returned.
+        """
+        exp_joint_values = self.test_data.get_joints("PTPJointValid", PLANNING_GROUP_NAME)
+
+        ptp = Ptp(goal=tuple(exp_joint_values), vel_scale=EXP_VEL_SCALE, acc_scale=EXP_ACC_SCALE)
+        req = ptp._cmd_to_request(self.robot)
+        self.assertIsNotNone(req)
+        self._analyze_request_general(PLANNING_GROUP_NAME, "PTP", EXP_VEL_SCALE, EXP_ACC_SCALE, req)
+
+        exp_joint_names = self.robot._robot_commander.get_group(req.group_name).get_active_joints()
+        self._analyze_request_joint(exp_joint_names, exp_joint_values, req)
+
     def test_ptp_cmd_convert_negative(self):
         """ Check that conversion to MotionPlanRequest returns None.
 
@@ -221,11 +258,12 @@ class TestAPICmdConversion(unittest.TestCase):
                 1. Call ptp convert function with no goal.
                 2. Call ptp convert function with a joint goal, which has more joint values than needed.
                 3. Call ptp convert function with goal of unknown type
+                4. Call ptp convert function with string to test iterable of unknown type
+                    - Uses a string with length 6 to be equal to an valid joint goal.
+                5. Call ptp convert function with PoseStamped and set timestamp.
 
             Test results:
-                1. raises exception.
-                2. raises exception.
-                2. raises exception.
+                1-5. raises exception.
         """
         # 1
         ptp_1 = Ptp(vel_scale=EXP_VEL_SCALE, acc_scale=EXP_ACC_SCALE)
@@ -240,6 +278,16 @@ class TestAPICmdConversion(unittest.TestCase):
         # 3
         ptp_3 = Ptp(goal=object(), vel_scale=EXP_VEL_SCALE, acc_scale=EXP_ACC_SCALE)
         self.assertRaises(NotImplementedError, ptp_3._cmd_to_request, self.robot)
+
+        # 4
+        ptp_4 = Ptp(goal="123456", vel_scale=EXP_VEL_SCALE, acc_scale=EXP_ACC_SCALE)
+        self.assertRaises(NotImplementedError, ptp_4._cmd_to_request, self.robot)
+
+        # 5
+        goal = PoseStamped()
+        goal.header.stamp.secs = 50
+        ptp_5 = Ptp(goal=goal, vel_scale=EXP_VEL_SCALE, acc_scale=EXP_ACC_SCALE)
+        self.assertRaises(ValueError, ptp_5._cmd_to_request, self.robot)
 
     def test_ptp_relative_joint(self):
         """ Test the conversion of ptp command with relative joint works correctly
@@ -909,32 +957,41 @@ class TestAPICmdConversion(unittest.TestCase):
         ref_frame = self.test_data.get_pose("Blend_1_Mid", PLANNING_GROUP_NAME)
         goal_pose_bf = self.test_data.get_pose("Blend_1_Start", PLANNING_GROUP_NAME)
 
-        goal_pose_bf_tf = pm.toTf(pm.fromMsg(goal_pose_bf))
-        ref_frame_tf = pm.toTf(pm.fromMsg(ref_frame))
-
         rospy.sleep(rospy.Duration.from_sec(0.5))
 
         # init
         time_tf = rospy.Time.now()
-        goal_pose_in_rf = [[0, 0, 0], [0, 0, 0, 1]]
+        zero_pose = PoseStamped()
+        zero_pose.pose.orientation.w = 1.0
+        goal_pose_rf_msg = None
         base_frame_name = self.robot._robot_commander.get_planning_frame()
 
         try:
-            self.tf.sendTransform(goal_pose_bf_tf[0], goal_pose_bf_tf[1], time_tf,
-                                  "goal_pose_bf", base_frame_name)
-            self.tf.sendTransform(ref_frame_tf[0], ref_frame_tf[1], time_tf,
-                                  "ref_move_frame", base_frame_name)
+            goal_transform = TransformStamped(transform=Transform(translation=goal_pose_bf.position,
+                                                                  rotation=goal_pose_bf.orientation),
+                                              child_frame_id="goal_pose_bf")
+            goal_transform.header.stamp = time_tf
+            goal_transform.header.frame_id = base_frame_name
+            self.tf_broadcaster_.sendTransform(goal_transform)
+
+            ref_transform = TransformStamped(transform=Transform(translation=ref_frame.position,
+                                                                 rotation=ref_frame.orientation),
+                                             child_frame_id="ref_move_frame")
+            ref_transform.header.stamp = time_tf
+            ref_transform.header.frame_id = base_frame_name
+            self.tf_broadcaster_.sendTransform(ref_transform)
 
             # look up the relative pose in reference frame of the goal
-            self.tf_listener.waitForTransform("goal_pose_bf", "ref_move_frame", rospy.Time(0), rospy.Duration(2, 0))
+            self.assertTrue(self.tf_buffer_.can_transform("goal_pose_bf", "ref_move_frame",
+                                                          rospy.Time(0), rospy.Duration(2, 0)))
 
             rospy.sleep(rospy.Duration.from_sec(0.1))
 
-            goal_pose_in_rf = self.tf_listener.lookupTransform("ref_move_frame", "goal_pose_bf", rospy.Time(0))
+            zero_pose.header.stamp = rospy.Time(0)
+            zero_pose.header.frame_id = "goal_pose_bf"
+            goal_pose_rf_msg = self.tf_buffer_.transform(zero_pose, "ref_move_frame").pose
         except:
             rospy.logerr("Failed to setup transforms for test!")
-
-        goal_pose_rf_msg = pm.toMsg(pm.fromTf(goal_pose_in_rf))
 
         # convert the goal in reference frame to planning request(goal in base frame)
         ptp = Ptp(goal=goal_pose_rf_msg, reference_frame="ref_move_frame")
@@ -1011,38 +1068,52 @@ class TestAPICmdConversion(unittest.TestCase):
         # get and transform test data
         ref_frame = self.test_data.get_pose("Blend_1_Mid", PLANNING_GROUP_NAME)
         goal_pose_bf = self.test_data.get_pose("Blend_1_Start", PLANNING_GROUP_NAME)
-        goal_pose_bf_tf = pm.toTf(pm.fromMsg(goal_pose_bf))
-        ref_frame_tf = pm.toTf(pm.fromMsg(ref_frame))
 
         rospy.sleep(rospy.Duration.from_sec(0.5))
 
         # init
         base_frame_name = self.robot._robot_commander.get_planning_frame()
         time_tf = rospy.Time.now()
-        goal_pose_in_rf = [[0, 0, 0], [0, 0, 0, 1]]
+        zero_pose = PoseStamped()
+        zero_pose.pose.orientation.w = 1.0
+        goal_pose_rf_msg = None
 
         try:
-            self.tf.sendTransform(goal_pose_bf_tf[0], goal_pose_bf_tf[1], time_tf,
-                                  "rel_goal_pose_bf", base_frame_name)
-            self.tf.sendTransform(ref_frame_tf[0], ref_frame_tf[1], time_tf,
-                                  "ref_rel_frame", base_frame_name)
+            goal_transform = TransformStamped(transform=Transform(translation=goal_pose_bf.position,
+                                                                  rotation=goal_pose_bf.orientation),
+                                              child_frame_id="rel_goal_pose_bf")
+            goal_transform.header.stamp = time_tf
+            goal_transform.header.frame_id = base_frame_name
+            self.tf_broadcaster_.sendTransform(goal_transform)
 
-            self.tf_listener.waitForTransform("rel_goal_pose_bf", "ref_rel_frame", time_tf, rospy.Duration(2, 0))
+            ref_transform = TransformStamped(transform=Transform(translation=ref_frame.position,
+                                                                 rotation=ref_frame.orientation),
+                                             child_frame_id="ref_rel_frame")
+            ref_transform.header.stamp = time_tf
+            ref_transform.header.frame_id = base_frame_name
+            self.tf_broadcaster_.sendTransform(ref_transform)
+
+            self.assertTrue(self.tf_buffer_.can_transform("rel_goal_pose_bf", "ref_rel_frame",
+                                                          time_tf, rospy.Duration(2, 0)))
 
             rospy.sleep(rospy.Duration.from_sec(0.1))
 
-            goal_pose_in_rf = self.tf_listener.lookupTransform("ref_rel_frame", "rel_goal_pose_bf", time_tf)
+            zero_pose.header.stamp = time_tf
+            zero_pose.header.frame_id = "rel_goal_pose_bf"
+            goal_pose_rf_msg = self.tf_buffer_.transform(zero_pose, "ref_rel_frame").pose
         except:
             rospy.logerr("Failed to setup transforms for test!")
-
-        goal_pose_rf_msg = pm.toMsg(pm.fromTf(goal_pose_in_rf))
 
         # move to initial position and use relative move to reach goal
         self.robot.move(Ptp(goal=ref_frame))
 
-        self.tf.sendTransform(ref_frame_tf[0], ref_frame_tf[1], rospy.Time.now(), "ref_rel_frame", base_frame_name)
+        ref_transform.header.stamp = rospy.Time.now()
+        self.tf_broadcaster_.sendTransform(ref_transform)
         rospy.sleep(rospy.Duration.from_sec(0.1))
-        self.tf_listener.waitForTransform(base_frame_name, "ref_rel_frame", rospy.Time(0), rospy.Duration(1, 0))
+        self.assertTrue(self.tf_buffer_.can_transform(base_frame_name,
+                                                      "ref_rel_frame",
+                                                      rospy.Time(0),
+                                                      rospy.Duration(1, 0)))
 
         ptp = Ptp(goal=goal_pose_rf_msg, reference_frame="ref_rel_frame", relative=True)
         req = ptp._cmd_to_request(self.robot)
@@ -1065,30 +1136,33 @@ class TestAPICmdConversion(unittest.TestCase):
 
         # get and transform test data
         ref_frame = self.test_data.get_pose("Blend_1_Mid", PLANNING_GROUP_NAME)
-        ref_frame_tf = pm.toTf(pm.fromMsg(ref_frame))
 
         rospy.sleep(rospy.Duration.from_sec(0.5))
 
-        # init
-        tcp_ref = [[0, 0, 0], [0, 0, 0, 1]]
-        tcp_base = [[0, 0, 0], [0, 0, 0, 1]]
-        time_tf = rospy.Time.now()
-        base_frame = self.robot._robot_commander.get_planning_frame()
+        # init zero-transform
+        zero_pose = PoseStamped()
+        zero_pose.pose.orientation.w = 1.0
+        tcp_ref_msg = None
+        tcp_base_msg = None
 
         try:
-            self.tf.sendTransform(ref_frame_tf[0], ref_frame_tf[1],
-                                  time_tf, "ref_frame", base_frame)
+            t = TransformStamped(transform=Transform(translation=ref_frame.position, rotation=ref_frame.orientation),
+                                 child_frame_id="ref_frame")
+            t.header.stamp = rospy.Time.now()
+            base_frame = self.robot._robot_commander.get_planning_frame()
+            t.header.frame_id = base_frame
+            self.tf_broadcaster_.sendTransform(t)
 
-            self.tf_listener.waitForTransform(base_frame, "ref_frame", time_tf, rospy.Duration(2, 0))
+            self.assertTrue(self.tf_buffer_.can_transform(base_frame, "ref_frame",
+                                                          t.header.stamp, rospy.Duration(2, 0)))
             rospy.sleep(rospy.Duration.from_sec(0.1))
-            tcp_ref = self.tf_listener.lookupTransform("ref_frame", "prbt_tcp", time_tf)
-            tcp_base = self.tf_listener.lookupTransform(base_frame, "prbt_tcp", time_tf)
+            zero_pose.header.stamp = t.header.stamp
+            zero_pose.header.frame_id = "prbt_tcp"
+            tcp_ref_msg = self.tf_buffer_.transform(zero_pose, "ref_frame").pose
+            tcp_base_msg = self.tf_buffer_.transform(zero_pose, base_frame).pose
         except Exception as e:
             print e
             rospy.logerr("Failed to setup transforms for test!")
-
-        tcp_ref_msg = pm.toMsg(pm.fromTf(tcp_ref))
-        tcp_base_msg = pm.toMsg(pm.fromTf(tcp_base))
 
         # read current pose, move robot and do it again
         start_bf = self.robot.get_current_pose()
@@ -1097,9 +1171,9 @@ class TestAPICmdConversion(unittest.TestCase):
         self.robot.move(Ptp(goal=ref_frame))
 
         # resending tf (otherwise transform pose could read old transform to keep time close together.
-        time_tf = rospy.Time.now()
-        self.tf.sendTransform(ref_frame_tf[0], ref_frame_tf[1], time_tf, "ref_frame", base_frame)
-        self.tf_listener.waitForTransform(base_frame, "ref_frame", time_tf, rospy.Duration(1, 0))
+        t.header.stamp = rospy.Time.now()
+        self.tf_broadcaster_.sendTransform(t)
+        self.assertTrue(self.tf_buffer_.can_transform(base_frame, "ref_frame", t.header.stamp, rospy.Duration(1, 0)))
 
         ref_frame_bf = self.robot.get_current_pose()
         ref_frame_rf = self.robot.get_current_pose(base="ref_frame")
@@ -1107,7 +1181,7 @@ class TestAPICmdConversion(unittest.TestCase):
         self._analyze_pose(tcp_base_msg, start_bf)
         self._analyze_pose(tcp_ref_msg, start_rf)
         self._analyze_pose(ref_frame, ref_frame_bf)
-        self._analyze_pose(Pose(orientation=Quaternion(0, 0, 0, 1)), ref_frame_rf)
+        self._analyze_pose(Pose(orientation=Quaternion(w=1.0)), ref_frame_rf)
 
     def test_to_string(self):
         """ Test if to string functions cause errors
@@ -1133,6 +1207,46 @@ class TestAPICmdConversion(unittest.TestCase):
             reference_frame=ref, vel_scale=0.2, acc_scale=0.2))
         str(Lin(goal=[0, 0, 0, 0, 0, 0], relative=True,
             reference_frame=ref, vel_scale=0.2, acc_scale=0.2))
+
+    def test_command_comparison(self):
+        """ Test if command comparison works as intended
+
+            Test sequence:
+                1. Create Commands
+                2. check the for equivalence and difference
+        """
+
+        self.assertEqual(Ptp(), Ptp())
+        self.assertEqual(Lin(), Lin())
+        self.assertEqual(Circ(), Circ())
+        self.assertEqual(Ptp(goal=[1, 3]), Ptp(goal=[1, 3]))
+        self.assertEqual(Ptp(planning_group="test"), Ptp(planning_group="test"))
+        self.assertEqual(Ptp(target_link="prbt_tcp"), Ptp(target_link="prbt_tcp"))
+        self.assertEqual(Ptp(vel_scale=.1), Ptp(vel_scale=.1))
+        self.assertEqual(Ptp(acc_scale=.1), Ptp(acc_scale=.1))
+        self.assertEqual(Ptp(relative=True), Ptp(relative=True))
+        self.assertEqual(Ptp(reference_frame="prbt_tcp"), Ptp(reference_frame="prbt_tcp"))
+        self.assertEqual(Ptp(goal=Pose(position=Point(1, 2, 3), orientation=Quaternion(1, 0, 0, 0))),
+                         Ptp(goal=Pose(position=Point(1, 2, 3), orientation=Quaternion(1, 0, 0, 0))))
+
+        self.assertNotEqual(Ptp(), Circ())
+        self.assertNotEqual(Ptp(), Lin())
+        self.assertNotEqual(Circ(goal=[1], interim=Point(1, 3, 4)), Circ(goal=[1], center=Point(1, 3, 4)))
+        self.assertNotEqual(Ptp(planning_group="test"), Ptp(planning_group="test2"))
+        self.assertNotEqual(Ptp(target_link="prbt_tcp"), Ptp(target_link="world"))
+        self.assertNotEqual(Ptp(vel_scale=.1), Ptp(vel_scale=.2))
+        self.assertNotEqual(Ptp(acc_scale=.1), Ptp(acc_scale=.2))
+        self.assertNotEqual(Ptp(relative=False), Ptp(relative=True))
+        self.assertNotEqual(Ptp(reference_frame="prbt_tcp"), Ptp(reference_frame="world"))
+        self.assertNotEqual(Ptp(goal=Pose(position=Point(1, 2, 3), orientation=Quaternion(1, 0, 0, 0))),
+                            Ptp(goal=Pose(position=Point(3, 2, 1), orientation=Quaternion(1, 0, 0, 0))))
+        self.assertNotEqual(Ptp(goal=Pose(position=Point(1, 2, 3), orientation=Quaternion(1, 0, 0, 0))),
+                            Ptp(goal=Pose(position=Point(1, 2, 3), orientation=Quaternion(0, 0, 0, 1))))
+
+        self.assertNotEqual(Ptp(), "")
+        self.assertNotEqual(Ptp(), "")
+        self.assertNotEqual(Circ(), "")
+        self.assertEqual(len({Ptp(), Ptp(), Circ()}), 2)
 
 
 if __name__ == '__main__':
