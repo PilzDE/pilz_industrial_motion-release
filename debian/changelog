@@ -1,0 +1,10 @@
+ros-melodic-pilz-store-positions (0.4.11-1stretch) stretch; urgency=high
+
+  * Add feature to storage positions to file.
+  * Contributors: Pilz GmbH and Co. KG
+  * Add ability to store one position
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Joachim Schleicher <j.schleicher@pilz.de>  Wed, 15 Jul 2020 22:00:00 -0000
+
+
