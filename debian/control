@@ -1,0 +1,12 @@
+Source: ros-melodic-pilz-robot-programming
+Section: misc
+Priority: optional
+Maintainer: Alexander Gutenkunst <a.gutenkunst@pilz.de>
+Build-Depends: debhelper (>= 9.0.0), python-coverage, python-docopt, python-mock, ros-melodic-catkin, ros-melodic-code-coverage, ros-melodic-pilz-industrial-motion-testutils, ros-melodic-prbt-moveit-config, ros-melodic-prbt-pg70-support, ros-melodic-roslint, ros-melodic-rospy, ros-melodic-rostest, ros-melodic-rosunit
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-pilz-robot-programming
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-psutil, ros-melodic-moveit-commander, ros-melodic-pilz-msgs, ros-melodic-pilz-trajectory-generation, ros-melodic-rospy, ros-melodic-tf-conversions, ros-melodic-tf2-geometry-msgs, ros-melodic-tf2-ros
+Description: An Easy to use API to execute standard industrial robot commands like Ptp, Lin, Circ and Sequence using Moveit.
