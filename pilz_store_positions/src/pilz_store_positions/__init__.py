@@ -1,6 +1,4 @@
-#! /usr/bin/python
-
-# Copyright (c) 2018 Pilz GmbH & Co. KG
+# Copyright (c) 2019 Pilz GmbH & Co. KG
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -15,30 +13,5 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-class RobotVersionError(Exception):
-    pass
-
-
-class RobotMultiInstancesError(Exception):
-    pass
-
-
-class RobotMoveAlreadyRunningError(Exception):
-    pass
-
-
-class RobotMoveFailed(Exception):
-    pass
-
-
-class RobotUnknownCommandType(Exception):
-    pass
-
-
-class RobotCurrentStateError(Exception):
-    pass
-
-
-class RobotBrakeTestException(Exception):
-    pass
+from .ros_message_serializer import RosMessageSerializer
+from .pose_file_tf_publisher import PoseFileTFPublisher
