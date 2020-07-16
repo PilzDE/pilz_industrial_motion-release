@@ -1,0 +1,13 @@
+Source: ros-melodic-pilz-extensions
+Section: misc
+Priority: optional
+Maintainer: Alexander Gutenkunst <a.gutenkunst@pilz.de>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-code-coverage, ros-melodic-joint-limits-interface, ros-melodic-roscpp, ros-melodic-rostest
+Homepage: https://wiki.ros.org/pilz_extensions
+Standards-Version: 3.9.2
+
+Package: ros-melodic-pilz-extensions
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-joint-limits-interface
+Description: The pilz_extensions package.
+ Here are classes extending the functionality of other packages. On the long run these extensions should become pull requests on the respective packages.
