@@ -1,6 +1,4 @@
-#! /usr/bin/python
-
-# Copyright (c) 2018 Pilz GmbH & Co. KG
+# Copyright (c) 2020 Pilz GmbH & Co. KG
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -15,30 +13,20 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Quaternion
 
-class RobotVersionError(Exception):
-    pass
-
-
-class RobotMultiInstancesError(Exception):
-    pass
-
-
-class RobotMoveAlreadyRunningError(Exception):
-    pass
-
-
-class RobotMoveFailed(Exception):
-    pass
-
-
-class RobotUnknownCommandType(Exception):
-    pass
-
-
-class RobotCurrentStateError(Exception):
-    pass
-
-
-class RobotBrakeTestException(Exception):
-    pass
+start_pose_test = Pose(
+    position=Point(
+        x=7,
+        y=0.0,
+        z=0.0
+    ),
+    orientation=Quaternion(
+        x=0.0,
+        y=0.0,
+        z=0.0,
+        w=-1.0
+    )
+)
