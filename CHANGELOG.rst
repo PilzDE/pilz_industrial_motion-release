@@ -2,6 +2,9 @@
 Changelog for package pilz_extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.12 (2020-11-24)
+-------------------
+
 0.4.11 (2020-07-16)
 -------------------
 * Add feature to store points in package 'pilz_store_positions'.
