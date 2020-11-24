@@ -1,6 +1,6 @@
 <package format="2">
   <name>pilz_industrial_motion</name>
-  <version>0.4.11</version>
+  <version>0.4.12</version>
   <description>The pilz_industrial_motion package</description>
 
   <maintainer email="a.gutenkunst@pilz.de">Alexander Gutenkunst</maintainer>
@@ -17,7 +17,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>pilz_extensions</exec_depend>
-  <exec_depend>pilz_msgs</exec_depend>
   <exec_depend>pilz_trajectory_generation</exec_depend>
   <exec_depend>pilz_robot_programming</exec_depend>
 
