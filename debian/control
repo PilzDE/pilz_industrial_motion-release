@@ -1,0 +1,12 @@
+Source: ros-noetic-pilz-industrial-motion
+Section: misc
+Priority: optional
+Maintainer: Alexander Gutenkunst <a.gutenkunst@pilz.de>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin
+Homepage: https://wiki.ros.org/pilz_industrial_motion
+Standards-Version: 3.9.2
+
+Package: ros-noetic-pilz-industrial-motion
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-pilz-industrial-motion-planner, ros-noetic-pilz-msgs, ros-noetic-pilz-robot-programming
+Description: The pilz_industrial_motion package
