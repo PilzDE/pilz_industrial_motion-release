@@ -2,6 +2,17 @@
 Changelog for package pilz_industrial_motion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.0 (2021-05-03)
+------------------
+* Port to ROS Noetic (ubuntu 20.04, python3)
+  * Remove pilz_store_positions package
+  * Update branching model in README.md
+  * Use relative paths for test-data/movecmd.py (colcon support)
+  * Misc minor refactorings
+* Update maintainer list
+* Move pilz command planner to moveit
+* Contributors: Pilz GmbH and Co. KG
+
 0.4.12 (2020-11-24)
 -------------------
 * Remove pilz_msgs from meta-package
