@@ -1,0 +1,12 @@
+Source: ros-noetic-pilz-robot-programming
+Section: misc
+Priority: optional
+Maintainer: Alexander Gutenkunst <a.gutenkunst@pilz.de>
+Build-Depends: debhelper (>= 9.0.0), python3-coverage, python3-docopt, python3-mock, ros-noetic-catkin, ros-noetic-code-coverage, ros-noetic-pilz-industrial-motion-testutils, ros-noetic-prbt-hardware-support, ros-noetic-prbt-moveit-config, ros-noetic-prbt-pg70-support, ros-noetic-roslint, ros-noetic-rospy, ros-noetic-rostest, ros-noetic-rosunit
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-noetic-pilz-robot-programming
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-psutil, ros-noetic-moveit-commander, ros-noetic-pilz-industrial-motion-planner, ros-noetic-pilz-msgs, ros-noetic-rospy, ros-noetic-tf-conversions, ros-noetic-tf2-geometry-msgs, ros-noetic-tf2-ros
+Description: An Easy to use API to execute standard industrial robot commands like Ptp, Lin, Circ and Sequence using Moveit.
