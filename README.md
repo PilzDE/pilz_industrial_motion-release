@@ -1,62 +1,53 @@
-# Store poses during teaching
+# Package: pilz_industrial_motion
+Meta package containing the current results of the
+[ROSIN FTP: Industrial trajectory generation for MoveIt!](http://rosin-project.eu/ftp/industrial-trajectory-generation).
+The FTP is implemented by Pilz GmbH & Co. KG.
 
-After moving the robot to the desired position, you can store the current position to file.
+![PilzIndustrialMotion](http://rosin-project.eu/wp-content/uploads/prbt_Service_Robotics_Modules_plus_Operator-1024x683.jpg)
 
-To save the current robot pose as ros_msg to a file use `rosrun pilz_store_postions store_current_pose`.
-The generated file is stored at your current directory as `points.py` and can be included into your pilz_robot_programming script as follows:
+## Build Status
 
-```
-#!/usr/bin/env python
-from pilz_robot_programming import *
-import points as pts
-import rospy
+|   | Kinetic | Melodic |
+| ----| --------|-------- |
+| Travis  | [![Build Status](https://travis-ci.org/PilzDE/pilz_industrial_motion.svg?branch=kinetic-devel)](https://travis-ci.org/PilzDE/pilz_industrial_motion) | [![Build Status](https://travis-ci.org/PilzDE/pilz_industrial_motion.svg?branch=melodic-devel)](https://travis-ci.org/PilzDE/pilz_industrial_motion) |
+| Buildfarm src | [![buildfarm](http://build.ros.org/buildStatus/icon?job=Ksrc_uX__pilz_industrial_motion__ubuntu_xenial__source)](http://build.ros.org/view/Ksrc_uX/job/Ksrc_uX__pilz_industrial_motion__ubuntu_xenial__source/) | [![buildfarm](http://build.ros.org/buildStatus/icon?job=Msrc_uB__pilz_industrial_motion__ubuntu_bionic__source)](http://build.ros.org/view/Msrc_uB/job/Msrc_uB__pilz_industrial_motion__ubuntu_bionic__source/) |
+| Buildfarm bin | [![buildfarm](http://build.ros.org/buildStatus/icon?job=Kbin_uX64__pilz_industrial_motion__ubuntu_xenial_amd64__binary)](http://build.ros.org/view/Kbin_uX64/job/Kbin_uX64__pilz_industrial_motion__ubuntu_xenial_amd64__binary/) | [![buildfarm](http://build.ros.org/buildStatus/icon?job=Mbin_uB64__pilz_industrial_motion__ubuntu_bionic_amd64__binary)](http://build.ros.org/view/Mbin_uB64/job/Mbin_uB64__pilz_industrial_motion__ubuntu_bionic_amd64__binary/)| 
 
-__REQUIRED_API_VERSION__ = "1"    # API version
-__ROBOT_VELOCITY__ = 0.5          # velocity of the robot
+### Note to Developers:
+`melodic-devel` is considered to be the active development branch.
+Relevant changes are cherry-picked into `kinetic-devel` on a case-by-case basis.
 
-# main program
-def start_program():
+## Package: pilz_trajectory_generation
+Provides the generators to create LIN, PTP and CIRC trajectories. All of these commands can be combined and
+executed in sequence, with and without blending, using a dedicated MoveIt! capability.
 
-    # move to start point with joint values to avoid random trajectory
-    r.move(Ptp(goal=pts.pick_pose, vel_scale=__ROBOT_VELOCITY__))
+Custom commands can easily be defined and integrated due to the usage of a plugin structure.
 
-if __name__ == "__main__":
-    # init a rosnode
-    rospy.init_node('robot_program_node')
+## Package: pilz_extensions
+Minor extensions of existing packages needed for the trajectory_generation.
 
-    # initialisation
-    r = Robot(__REQUIRED_API_VERSION__)  # instance of the robot
+## Package: pilz\_robot\_programming
+pilz\_robot\_programming provides a python API for an intuitive programming of a MoveIt! enabled robot. For details please refer to the [ Pilz Robot Programming Documentation ](pilz_robot_programming/Readme.rst).
 
-    # start the main program
-    start_program()
-```
+## Package: pilz_store_positions
+Contains a python module to store poses during teach-in.
 
-while the generated points.py looks similar as:
-```
-from geometry_msgs.msg import Point
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Quaternion
+***
+<!--
+    ROSIN acknowledgement from the ROSIN press kit
+    @ https://github.com/rosin-project/press_kit
+-->
 
-pick_pose = Pose(
-    position = Point(
-      x = 0.07,
-      y = 0.40,
-      z = 0.50
-    ),
-    orientation = Quaternion(
-      x = 1.0,
-      y = 0.0,
-      z = 0.0,
-      w = 0.0
-    )
-)
-```
+<a href="http://rosin-project.eu">
+  <img src="http://rosin-project.eu/wp-content/uploads/rosin_ack_logo_wide.png"
+       alt="rosin_logo" height="60" >
+</a>
 
-### Display Stored Points
-Stored points can be published as target_frames. 
-Those target frames can for example be displayed by Rviz.
+Supported by ROSIN - ROS-Industrial Quality-Assured Robot Software Components.
+More information: <a href="http://rosin-project.eu">rosin-project.eu</a>
 
-To publish the points run:
-```
-rosrun pilz_store_positions pose_visualisation_node _file_path:="/absolute/path/to/points.py"
-```
+<img src="http://rosin-project.eu/wp-content/uploads/rosin_eu_flag.jpg"
+     alt="eu_flag" height="45" align="left" >
+
+This project has received funding from the European Union’s Horizon 2020
+research and innovation programme under grant agreement no. 732287.
