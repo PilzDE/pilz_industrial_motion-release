@@ -2,6 +2,15 @@
 Changelog for package pilz_robot_programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.13 (2021-07-12)
+-------------------
+* Merge our trajectory_generation as moveit planner
+  * update all references to the planner
+  * move sequence related pilz msgs to moveit
+  * change blend radius in test data to not cause blend radius to large error
+* Prevent misunderstandings in acceptance-tests
+* Contributors: Pilz GmbH and Co. KG
+
 0.4.12 (2020-11-24)
 -------------------
 * Adapt to generalized test-utils
@@ -23,7 +32,6 @@ Changelog for package pilz_robot_programming
 * Fix acceptance tests.
 * Fix segfault on shutdown.
 * Fix python 3 compatibility issues.
-* Contributors: Pilz GmbH and Co. KG
 
 0.4.10 (2019-12-04)
 -------------------
