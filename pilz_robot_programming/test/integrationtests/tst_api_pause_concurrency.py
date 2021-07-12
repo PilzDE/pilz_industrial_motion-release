@@ -15,13 +15,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from pilz_robot_programming import *
+from rospkg import RosPack
+from pilz_robot_programming.robot import *
 from pilz_industrial_motion_testutils.xml_testdata_loader import *
 from pilz_industrial_motion_testutils.integration_test_utils import *
 from pilz_industrial_motion_testutils.robot_motion_observer import RobotMotionObserver
-from pathlib import Path
+from pilz_robot_programming.commands import *
 
-_TEST_DATA_FILE_NAME = Path(__file__).parent.parent.absolute() / Path("test_data/test_data.xml")
+_TEST_DATA_FILE_NAME = RosPack().get_path("pilz_robot_programming") + "/test/test_data/test_data.xml"
 PLANNING_GROUP_NAME = "manipulator"
 API_VERSION = "1"
 
@@ -124,8 +125,7 @@ class TestAPIPauseConcurrency(unittest.TestCase):
         thread_stop.join()
         thread_resume.join()
 
-        move_thread.join()
-        self.assertTrue(move_thread.exception_thrown)
+        self.assertRaises(RobotMoveFailed, move_thread.join())
 
     def test_resume_move_concurrency_when_paused_without_move(self):
         """ Test the concurrent situation of resume and move pause is requested

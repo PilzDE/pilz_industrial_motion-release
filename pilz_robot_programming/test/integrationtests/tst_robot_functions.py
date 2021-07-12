@@ -17,6 +17,7 @@
 import unittest
 import rospy
 import sys
+from rospkg import RosPack
 from pilz_robot_programming.robot import *
 from pilz_robot_programming.commands import Ptp
 from tst_api_utils import setOverrideParam
@@ -51,7 +52,6 @@ class TestSpeedOverride(unittest.TestCase):
         self.robot.move(ptp)
         self.assertEqual(ptp._vel_scale, 0.3)
         self.assertEqual(ptp._acc_scale, 0.4)
-
 
 if __name__ == '__main__':
     import rostest

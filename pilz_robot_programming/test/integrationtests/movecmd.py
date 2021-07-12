@@ -52,11 +52,10 @@ Options:
 
 """
 
-import rospy
 import geometry_msgs.msg
 from docopt import docopt
-from pilz_robot_programming.robot import Robot
-from pilz_robot_programming.commands import Ptp, Lin, Circ, Gripper, from_euler
+from pilz_robot_programming.robot import *
+from pilz_robot_programming.commands import *
 
 __REQUIRED_API_VERSION__ = "1"
 
@@ -106,7 +105,7 @@ if __name__ == '__main__':
 
         # Check the type
         if not all(isinstance(n, float) for n in goal_joint):
-            print("Goal joints must be float. Abort!")
+            print "Goal joints must be float. Abort!"
 
         args['goal'] = goal_joint
 

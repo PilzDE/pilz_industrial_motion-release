@@ -17,7 +17,7 @@
 from geometry_msgs.msg import Point
 from pilz_robot_programming.robot import *
 from pilz_robot_programming.commands import *
-from pilz_industrial_motion_testutils.acceptance_test_utils import askPermission, askSuccess
+from pilz_industrial_motion_testutils.acceptance_test_utils import _askPermission, _askSuccess
 
 PTP_VEL_PICK = 0.1
 
@@ -46,13 +46,13 @@ def _test_ptp_pos(robot):
           1. Robot moves to zero position.
           2. Robot moves away from the singularity.
     """
-    if askPermission(_test_ptp_pos.__name__) == 0:
+    if _askPermission(_test_ptp_pos.__name__) == 0:
         return
     robot.move(Ptp(goal=[0, 0, 0, 0, 0, 0]))
     robot.move(Ptp(goal=[0, -0.78, 0.78, 0, 1.56, 0]))
 
-    askSuccess(_test_ptp_pos.__name__,
-               'The robot should have moved to [0,0,0,0,0,0] and after that away from [0,0,0,0,0,0].')
+    _askSuccess(_test_ptp_pos.__name__,
+                'The robot should have moved to [0,0,0,0,0,0] and after that away from [0,0,0,0,0,0].')
 
 
 def _test_lin_pos(robot):
@@ -68,14 +68,14 @@ def _test_lin_pos(robot):
           2. Robot moves 15cm linear down.
           3. Robot moves 15cm linear up.
     """
-    if askPermission(_test_lin_pos.__name__) == 0:
+    if _askPermission(_test_lin_pos.__name__) == 0:
         return
     robot.move(Ptp(goal=Pose(position=Point(-0.46, -0.21, 0.19), orientation=from_euler(0, -3.14, -0.25))))
     robot.move(Lin(goal=Pose(position=Point(0.0, 0.0, -0.15)), relative=True, vel_scale=PTP_VEL_PICK))
     robot.move(Lin(goal=Pose(position=Point(0.0, 0.0, 0.15)), relative=True, vel_scale=PTP_VEL_PICK))
 
-    askSuccess(_test_lin_pos.__name__, 'The robot should have moved to the upper pick position. Afterwards the tcp'
-                                       + ' should have moved linear 15cm down and then linear 15cm up.')
+    _askSuccess(_test_lin_pos.__name__, 'The robot should have moved to the upper pick position. Afterwards the tcp'
+                                        + ' should have moved linear 15cm down and then linear 15cm up.')
 
 
 def _test_seq_pos1(robot):
@@ -102,7 +102,7 @@ def _test_seq_pos1(robot):
                 f. Robot moves back the quarter circle.
                 g. Robot moves back to zero position.
     """
-    if askPermission(_test_seq_pos1.__name__) == 0:
+    if _askPermission(_test_seq_pos1.__name__) == 0:
         return
 
     x_pick = 0
@@ -132,10 +132,10 @@ def _test_seq_pos1(robot):
 
     robot.move(seq_l)
 
-    askSuccess(_test_seq_pos1.__name__, 'The robot should have moved to [0,0,0,0,0,0] and then to the upper pick'
-                                        + ' position. After that the robot tcp should have moved linear 15cm down and'
-                                        + ' then linear 15cm up. Further on the robot should have moved a quarter'
-                                        + ' circle forwards and backwards and then back to [0,0,0,0,0,0].')
+    _askSuccess(_test_seq_pos1.__name__, 'The robot should have moved to [0,0,0,0,0,0] and then to the upper pick'
+                                         + ' position. After that the robot tcp should have moved linear 15cm down and'
+                                         + ' then linear 15cm up. Further on the robot should have moved a quarter'
+                                         + ' circle forwards and backwards and then back to [0,0,0,0,0,0].')
 
 
 def _test_seq_pos2(robot):
@@ -158,7 +158,7 @@ def _test_seq_pos2(robot):
                 d. Robot moves 15cm linear up.
                 e. Robot moves back to zero position.
     """
-    if askPermission(_test_seq_pos2.__name__) == 0:
+    if _askPermission(_test_seq_pos2.__name__) == 0:
         return
 
     x_pick = 0
@@ -186,10 +186,10 @@ def _test_seq_pos2(robot):
 
     robot.move(seq_l)
 
-    askSuccess(_test_seq_pos2.__name__, 'The robot should have moved to a start position and then a quarter'
-                                        + ' circle arriving at the upper pick position. After that the robot tcp'
-                                        + ' should have moved linear 15cm down and then linear 15cm up. In the end the'
-                                        + ' robot should have moved back to [0,0,0,0,0,0].')
+    _askSuccess(_test_seq_pos2.__name__, 'The robot should have moved to a start position and then a quarter'
+                                         + ' circle arriving at the upper pick position. After that the robot tcp'
+                                         + ' should have moved linear 15cm down and then linear 15cm up. In the end the'
+                                         + ' robot should have moved back to [0,0,0,0,0,0].')
 
 
 def _test_circ_pos(robot):
@@ -205,7 +205,7 @@ def _test_circ_pos(robot):
           2. Robot moves half a circle.
           3. Robot moves half a circle back to origin.
     """
-    if askPermission(_test_circ_pos.__name__) == 0:
+    if _askPermission(_test_circ_pos.__name__) == 0:
         return
 
     robot.move(Ptp(goal=Pose(position=Point(-0.46, -0.21, 0.19), orientation=from_euler(0, -3.14, -0.25))))
@@ -218,8 +218,8 @@ def _test_circ_pos(robot):
                     orientation=from_euler(0, -3.14, -0.25)), vel_scale=PTP_VEL_PICK,
                     interim=Point(-0.565, -0.105, 0.19)))
 
-    askSuccess(_test_circ_pos.__name__, 'The robot should have moved to a start position and then two times half a'
-                                        + ' circle.')
+    _askSuccess(_test_circ_pos.__name__, 'The robot should have moved to a start position and then two times half a'
+                                         + ' circle.')
 
 
 def _test_blend_pos(robot):
@@ -233,7 +233,7 @@ def _test_blend_pos(robot):
           1. Robot moves to start position.
           2. Robot moves in a square without intermediate stops.
     """
-    if askPermission(_test_blend_pos.__name__) == 0:
+    if _askPermission(_test_blend_pos.__name__) == 0:
         return
 
     robot.move(Ptp(goal=Pose(position=Point(-0.46, -0.21, 0.19), orientation=from_euler(0, -3.14, -0.25))))
@@ -253,7 +253,7 @@ def _test_blend_pos(robot):
 
     robot.move(seq_l)
 
-    askSuccess(_test_blend_pos.__name__, 'The robot should moved to a start position and then in a square always retur'
+    _askSuccess(_test_blend_pos.__name__, 'The robot should moved to a start position and then in a square always retur'
                                          + 'ning to the start position. During the motion the robot does not stop.')
 
 

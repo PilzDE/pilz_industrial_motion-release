@@ -17,7 +17,7 @@
 from geometry_msgs.msg import Point
 from pilz_robot_programming.robot import *
 from pilz_robot_programming.commands import *
-from pilz_industrial_motion_testutils.acceptance_test_utils import askPermission, askSuccess
+from pilz_industrial_motion_testutils.acceptance_test_utils import _askPermission, _askSuccess
 
 VELOCITY_HIGH = 0.3
 VELOCITY_LOW = 0.1
@@ -47,7 +47,7 @@ def _test_circ_center(robot):
           2. Robot moves a quarter circle two times.
           3. Robot moves a quarter circle in the other direction two times.
     """
-    if askPermission(_test_circ_center.__name__) == 0:
+    if _askPermission(_test_circ_center.__name__) == 0:
         return
 
     START_POSE = Pose(position=Point(0.0, 0.4, 0.7), orientation=from_euler(0.0, 0.0, 0.0))
@@ -65,9 +65,9 @@ def _test_circ_center(robot):
     robot.move(Circ(goal=START_POSE,
                     center=CENTER_POINT, vel_scale=VELOCITY_HIGH, acc_scale=DEFAULT_ACC))
 
-    askSuccess(_test_circ_center.__name__,
-               'The robot should have moved to a start position, then a quarter circle two times and then a quarter'
-               + ' circle back two times.')
+    _askSuccess(_test_circ_center.__name__,
+                'The robot should have moved to a start position, then a quarter circle two times and then a quarter'
+                + ' circle back two times.')
 
 
 def _test_circ_interim(robot):
@@ -83,7 +83,7 @@ def _test_circ_interim(robot):
           2. Robot moves 5/12 of a circle and back to the start position.
           3. Robot moves 5/8 of a circle.
     """
-    if askPermission(_test_circ_interim.__name__) == 0:
+    if _askPermission(_test_circ_interim.__name__) == 0:
         return
 
     START_POSE = Pose(position=Point(0.0, 0.4, 0.7), orientation=from_euler(-1.57, 0.0, 0.0))
@@ -99,9 +99,9 @@ def _test_circ_interim(robot):
     robot.move(Circ(goal=Pose(position=Point(-0.37204, -0.14693, 0.7), orientation=from_euler(0.0, 0.0, 3.9279)),
                     interim=INTERIM_POINT, vel_scale=VELOCITY_LOW, acc_scale=DEFAULT_ACC))
 
-    askSuccess(_test_circ_interim.__name__,
-               'The robot should have moved to a start position, then 5/12 of a circle, back to the start position'
-               + ' and then 5/8 of a circle.')
+    _askSuccess(_test_circ_interim.__name__,
+                'The robot should have moved to a start position, then 5/12 of a circle, back to the start position'
+                + ' and then 5/8 of a circle.')
 
 
 def _test_circ_small_vertical(robot):
@@ -115,7 +115,7 @@ def _test_circ_small_vertical(robot):
           1. Robot moves to start position.
           2. Robot moves 1.99 PI along a small vertical circle.
     """
-    if askPermission(_test_circ_small_vertical.__name__) == 0:
+    if _askPermission(_test_circ_small_vertical.__name__) == 0:
         return
 
     robot.move(Ptp(goal=[0.0, 0.0, 1.57, 0.0, 0.0, 0.0]))
@@ -123,8 +123,8 @@ def _test_circ_small_vertical(robot):
     robot.move(Circ(goal=Pose(position=Point(-0.5, 0.19686, 0.39995), orientation=from_euler(0.0, -1.57, -1.57)),
                     interim=Point(-0.5, 0.3, 0.5), vel_scale=VELOCITY_LOW, acc_scale=DEFAULT_ACC))
 
-    askSuccess(_test_circ_small_vertical.__name__,
-               'The robot should have moved to a start position and then 1.99 PI along a small vertical circle.')
+    _askSuccess(_test_circ_small_vertical.__name__,
+                'The robot should have moved to a start position and then 1.99 PI along a small vertical circle.')
 
 
 if __name__ == "__main__":

@@ -2,19 +2,13 @@
 Changelog for package pilz_robot_programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.5.0 (2021-05-03)
-------------------
-* Adapt to changes in MoveThread api
-* Port to ROS Noetic (ubuntu 20.04, python3)
-  * Remove pilz_store_positions package
-  * Update branching model in README.md
-  * Use relative paths for test-data/movecmd.py (colcon support)
-  * Misc minor refactorings
-* Fix KeyError on calling release twice
-* Fix blend-radius and misunderstandings in Tests (#341, #330)
-* Fix architecture documentation
-* Use public acceptance-test utility methods
-* Move pilz command planner to moveit
+0.4.13 (2021-07-12)
+-------------------
+* Merge our trajectory_generation as moveit planner
+  * update all references to the planner
+  * move sequence related pilz msgs to moveit
+  * change blend radius in test data to not cause blend radius to large error
+* Prevent misunderstandings in acceptance-tests
 * Contributors: Pilz GmbH and Co. KG
 
 0.4.12 (2020-11-24)
@@ -38,7 +32,6 @@ Changelog for package pilz_robot_programming
 * Fix acceptance tests.
 * Fix segfault on shutdown.
 * Fix python 3 compatibility issues.
-* Contributors: Pilz GmbH and Co. KG
 
 0.4.10 (2019-12-04)
 -------------------

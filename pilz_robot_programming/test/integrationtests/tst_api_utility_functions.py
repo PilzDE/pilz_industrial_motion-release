@@ -15,12 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from pilz_robot_programming import *
+from rospkg import RosPack
+from pilz_robot_programming.robot import *
 from pilz_industrial_motion_testutils.xml_testdata_loader import *
-from pathlib import Path
+from pilz_robot_programming.commands import *
 from geometry_msgs.msg import PoseStamped, Pose
 
-_TEST_DATA_FILE_NAME = Path(__file__).parent.parent.absolute() / Path("test_data/test_data.xml")
+_TEST_DATA_FILE_NAME = RosPack().get_path("pilz_robot_programming") + "/test/test_data/test_data.xml"
 PLANNING_GROUP_NAME = "manipulator"
 API_VERSION = "1"
 COMPARE_PRECISION = 6
@@ -112,7 +113,6 @@ class TestAPIUtilityFunctions(unittest.TestCase):
         """ Check that trying to get the current joint states raises an exception.
         """
         self.assertRaises(RobotCurrentStateError, self.robot.get_current_joint_states, planning_group="invalid")
-
 
 if __name__ == '__main__':
     import rostest

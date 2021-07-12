@@ -1,12 +1,9 @@
 <!--
 Copyright © 2018 Pilz GmbH & Co. KG
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -267,13 +264,13 @@ limitations under the License.
 
     <sequences>
         <sequence name="LINLINBlend">
-            <sequenceCmd name="Blend_1_1_Lin" type="lin" blend_radius="0.08"/>
+            <sequenceCmd name="Blend_1_1_Lin" type="lin" blend_radius="0.05"/>
             <sequenceCmd name="Blend_1_2_Lin" type="lin" blend_radius="0" />
         </sequence>
 
         <sequence name="InvalidLINLINBlend">
             <sequenceCmd name="Blend_1_1_Lin_invalid" type="lin" blend_radius="0.12"/>
-            <sequenceCmd name="Blend_1_2_Lin" type="lin" blend_radius="0.08" />
+            <sequenceCmd name="Blend_1_2_Lin" type="lin" blend_radius="0.1" />
             <sequenceCmd name="Blend_1_3_Lin" type="lin" blend_radius="0" />
         </sequence>
     </sequences>
