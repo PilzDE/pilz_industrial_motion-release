@@ -1,0 +1,12 @@
+Source: ros-melodic-pilz-store-positions
+Section: misc
+Priority: optional
+Maintainer: Joachim Schleicher <j.schleicher@pilz.de>
+Build-Depends: debhelper (>= 9.0.0), python-mock, python-pytest-cov, ros-melodic-catkin, ros-melodic-code-coverage, ros-melodic-ros-pytest, ros-melodic-roslint, ros-melodic-rospy, ros-melodic-rostest, ros-melodic-std-msgs, ros-melodic-visualization-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-pilz-store-positions
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libyaml-dev, ros-melodic-geometry-msgs, ros-melodic-rospy, ros-melodic-tf2-ros
+Description: Allows to store poses during teach-in.
