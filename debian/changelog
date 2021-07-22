@@ -1,0 +1,27 @@
+ros-melodic-pilz-store-positions (0.4.14-1bionic) bionic; urgency=high
+
+
+
+ -- Joachim Schleicher <j.schleicher@pilz.de>  Wed, 21 Jul 2021 22:00:00 -0000
+
+ros-melodic-pilz-store-positions (0.4.13-1bionic) bionic; urgency=high
+
+
+
+ -- Joachim Schleicher <j.schleicher@pilz.de>  Sun, 11 Jul 2021 22:00:00 -0000
+
+ros-melodic-pilz-store-positions (0.4.12-1bionic) bionic; urgency=high
+
+  * Use new coverage feature of ros_pytest
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Joachim Schleicher <j.schleicher@pilz.de>  Mon, 23 Nov 2020 23:00:00 -0000
+
+ros-melodic-pilz-store-positions (0.4.11-1bionic) bionic; urgency=high
+
+  * Add ability to store one position
+  * Contributors: Pilz GmbH and Co. KG
+
+ -- Joachim Schleicher <j.schleicher@pilz.de>  Wed, 15 Jul 2020 22:00:00 -0000
+
+
