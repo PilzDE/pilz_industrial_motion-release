@@ -2,6 +2,14 @@
 Changelog for package pilz_trajectory_generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.14 (2021-07-22)
+-------------------
+* Deprecate this package since the planner has been integrated into [moveit](https://moveit.ros.org/documentation/planners/).
+* Contributors: Pilz GmbH and Co. KG
+
+0.4.13 (2021-07-12)
+-------------------
+
 0.4.12 (2020-11-24)
 -------------------
 
