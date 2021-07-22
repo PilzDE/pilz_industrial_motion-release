@@ -2,6 +2,9 @@
 Changelog for package pilz_robot_programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.14 (2021-07-22)
+-------------------
+
 0.4.13 (2021-07-12)
 -------------------
 * Merge our trajectory_generation as moveit planner
