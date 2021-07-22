@@ -2,6 +2,21 @@
 Changelog for package pilz_industrial_motion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.14 (2021-07-22)
+-------------------
+* Revert removing pilz_extension and pilz_trajectory_generation, but deprecate it.
+* Contributors: Pilz GmbH and Co. KG
+
+0.4.13 (2021-07-12)
+-------------------
+* Merge our trajectory_generation as moveit planner
+  * move sequence related pilz msgs to moveit
+  * remove pilz_extensions
+  * update README.md
+  * update package.xml
+  * update industrial_ci_action.yml
+* Contributors: Pilz GmbH and Co. KG
+
 0.4.12 (2020-11-24)
 -------------------
 * Remove pilz_msgs from meta-package
